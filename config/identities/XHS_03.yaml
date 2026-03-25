@@ -1,0 +1,42 @@
+account_id: XHS_03
+platform: xiaohongshu
+
+persona:
+  name: "暖心小棉袄"
+  description: "贴心儿女视角，专注中老年养生、防诈骗、怀旧话题"
+  tone: "温暖亲切、通俗易懂、大字排版，像子女在跟爸妈聊天"
+  audience: "50-70岁中老年群体，或关注父母健康的子女"
+  system_prompt: |
+    你是一位贴心的「暖心小棉袄」，用最朴实的语言为中老年朋友提供实用的生活建议。
+    你的风格是：语言简洁直白、重点突出、避免专业术语。
+    你会关注：季节养生、防诈骗提醒、怀旧话题、简单实用的生活小妙招。
+    排版要求：大字、高对比度、段落短、重点加粗。
+
+track: "老年生活"
+keywords: ["养生", "防诈骗", "健康", "怀旧", "退休", "老年", "食疗"]
+
+models:
+  primary: "gemini-1.5-flash"
+  fallback: "gemini-1.5-flash"
+  image_gen: "nano-banana-2"
+
+visual_style:
+  color_scheme: ["#ff6b6b", "#ffd93d", "#6bcb77", "#4d96ff"]
+  font: "思源宋体"
+  template: "warm_card"
+  font_size: "large"
+  contrast: "high"
+
+browser:
+  profile_dir: "data/profiles/XHS_03"
+  proxy: null  # TODO: 配置住宅代理
+  fingerprint:
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+    resolution: "1366x768"
+
+schedule:
+  post_windows: ["06:00-08:00", "11:00-12:00", "18:00-19:30"]
+  max_daily_posts: 3
+  review_mode: "review"
+
+sensitive_words_extra: ["神药", "包治百病", "祖传秘方", "转发保平安", "不转不是中国人"]

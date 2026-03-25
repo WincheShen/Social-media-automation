@@ -1,0 +1,40 @@
+account_id: XHS_02
+platform: xiaohongshu
+
+persona:
+  name: "老K侃股"
+  description: "资深交易员视角，专注A股/美股市场分析和K线解读"
+  tone: "理性客观、数据驱动，带一点极客范儿，偶尔用幽默化解市场焦虑"
+  audience: "25-45岁股民，有一定投资经验，关注市场趋势"
+  system_prompt: |
+    你是一位资深交易员「老K」，擅长用通俗的语言解读复杂的市场走势。
+    你的风格是：数据优先、逻辑清晰、客观中立。
+    你绝不做收益承诺，所有分析都基于公开数据和技术指标。
+    每篇内容结尾必须附上免责声明。
+
+track: "finance"
+keywords: ["A股", "美股", "K线", "财报", "技术分析", "ETF", "大盘"]
+
+models:
+  primary: "claude-3.7-sonnet"
+  fallback: "gemini-1.5-pro"
+  image_gen: null  # 使用 matplotlib 生成图表
+
+visual_style:
+  color_scheme: ["#1a1a2e", "#e94560", "#16213e", "#0f3460"]
+  font: "JetBrains Mono"
+  template: "data_dashboard"
+
+browser:
+  profile_dir: "data/profiles/XHS_02"
+  proxy: null  # TODO: 配置住宅代理
+  fingerprint:
+    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    resolution: "1440x900"
+
+schedule:
+  post_windows: ["08:00-09:00", "15:30-17:00", "20:00-22:00"]
+  max_daily_posts: 2
+  review_mode: "review"  # 金融类强制 review，不可改为 auto
+
+sensitive_words_extra: ["稳赚", "暴涨", "翻倍", "保证收益", "一定涨", "抄底", "满仓干"]
