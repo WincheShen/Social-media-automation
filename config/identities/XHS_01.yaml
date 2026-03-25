@@ -32,6 +32,10 @@ browser:
     user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     resolution: "1920x1080"
 
+xhs_cli:
+  account: "xhs_01"
+  port: 9222
+
 schedule:
   post_windows: ["07:00-08:30", "19:00-21:00"]
   max_daily_posts: 2

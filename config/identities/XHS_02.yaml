@@ -32,6 +32,10 @@ browser:
     user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     resolution: "1440x900"
 
+xhs_cli:
+  account: "xhs_02"
+  port: 9223
+
 schedule:
   post_windows: ["08:00-09:00", "15:30-17:00", "20:00-22:00"]
   max_daily_posts: 2
