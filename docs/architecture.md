@@ -456,8 +456,8 @@ track: "上海中考"
 keywords: ["中考", "择校", "体育考", "自招", "名额分配"]
 
 models:
-  primary: "gemini-1.5-pro"
-  fallback: "gemini-1.5-flash"
+  primary: "gemini-2.5-pro"
+  fallback: "gemini-2.5-flash"
   image_gen: null  # 使用代码生成图表
 
 visual_style:
@@ -615,7 +615,7 @@ data/
     "account_id": "XHS_01",
     "node": "research_engine",
     "event": "model_invoked",
-    "model": "gemini-1.5-pro",
+    "model": "gemini-2.5-pro",
     "tokens_in": 1200,
     "tokens_out": 800,
     "latency_ms": 3200,

@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from src.graph.state import AgentState
-from src.infra.model_adapter import ModelAdapter
+from src.infra.model_adapter import ModelRouter
 
 logger = logging.getLogger(__name__)
 
@@ -82,14 +82,16 @@ def _format_research_for_creative(research_results: list[dict]) -> tuple[str, st
 
 def _parse_copy_response(text: str) -> dict:
     """Extract JSON from the LLM copy generation response."""
-    if "```json" in text:
-        start = text.index("```json") + 7
-        end = text.index("```", start)
-        text = text[start:end].strip()
-    elif "```" in text:
-        start = text.index("```") + 3
-        end = text.index("```", start)
-        text = text[start:end].strip()
+    for fence in ("```json", "```"):
+        if fence in text:
+            start = text.index(fence) + len(fence)
+            end = text.find("```", start)
+            text = text[start:end].strip() if end != -1 else text[start:].strip()
+            break
+    else:
+        brace = text.find("{")
+        if brace != -1:
+            text = text[brace:]
 
     try:
         return json.loads(text)
@@ -221,16 +223,15 @@ async def creative_engine(state: AgentState) -> dict:
     )
 
     system_prompt = persona_cfg.get("system_prompt", "")
-    models_cfg = persona.get("models", {})
-    primary = models_cfg.get("primary", "gemini-1.5-pro")
-    fallback = models_cfg.get("fallback", "gemini-1.5-flash")
+    router = ModelRouter(persona)
+    rc = router.route("copywriter")
 
-    # 2. Generate copy via LLM
-    raw_response = await ModelAdapter.invoke_with_fallback(
-        primary, fallback, prompt,
+    logger.info("[Node 3] Using copywriter=%s temp=%.2f", rc.model, rc.temperature)
+
+    # 2. Generate copy via LLM (Copywriter role)
+    raw_response = await router.invoke(
+        "copywriter", prompt,
         system_prompt=system_prompt,
-        temperature=0.8,
-        max_tokens=4096,
     )
 
     copy = _parse_copy_response(raw_response)

@@ -22,6 +22,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -63,11 +64,11 @@ class XhsCliAdapter:
     ):
         self._skills_dir = Path(
             skills_dir or os.getenv("XHS_SKILLS_DIR", str(_DEFAULT_SKILLS_DIR))
-        )
+        ).resolve()
         self._account = account
         self._host = host
         self._port = port
-        self._python = python_bin or "python"
+        self._python = python_bin or sys.executable
         self._timeout = timeout
 
         # Validate paths exist (soft check — may not be installed yet)
@@ -357,7 +358,7 @@ class XhsCliAdapter:
                 args.append("--images")
                 args.extend(abs_images)
 
-        await self._run_cli(*args, timeout=90, parse_json=False)
+        await self._run_cli(*args, timeout=180, parse_json=False)
         logger.info("[XhsCli] Publish form filled — awaiting preview confirmation.")
 
     async def click_publish(self) -> PublishResult:

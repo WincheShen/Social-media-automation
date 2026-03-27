@@ -19,23 +19,14 @@ from typing import Any
 import httpx
 
 from src.graph.state import AgentState
-from src.infra.model_adapter import ModelAdapter
+from src.infra.model_adapter import ModelRouter
 from src.infra.xhs_cli import XhsCliAdapter, get_adapter_for_account
 from src.infra.xhs_cli_types import XhsCliError
 
 logger = logging.getLogger(__name__)
 
-# Task type → recommended model mapping
-TASK_MODEL_MAP: dict[str, str] = {
-    "policy_analysis": "gemini-1.5-pro",
-    "market_analysis": "claude-3.7-sonnet",
-    "trend_scan": "gemini-1.5-flash",
-    "general": None,  # will use persona.primary_model
-}
-
-
 def _classify_task(task: str, track: str) -> str:
-    """Classify the task to determine optimal model and data sources."""
+    """Classify the task to determine data-source strategy."""
     task_lower = task.lower()
     if any(kw in task_lower for kw in ["政策", "新规", "文件", "解读"]):
         return "policy_analysis"
@@ -44,17 +35,6 @@ def _classify_task(task: str, track: str) -> str:
     if any(kw in task_lower for kw in ["热点", "趋势", "话题", "养生"]):
         return "trend_scan"
     return "general"
-
-
-def _select_model(task_type: str, persona: dict) -> tuple[str, str]:
-    """Return (primary_model, fallback_model) for the task."""
-    models_cfg = persona.get("models", {})
-    fallback = models_cfg.get("fallback", "gemini-1.5-flash")
-
-    recommended = TASK_MODEL_MAP.get(task_type)
-    primary = recommended or models_cfg.get("primary", "gemini-1.5-pro")
-
-    return primary, fallback
 
 
 # ---------------------------------------------------------------------------
@@ -109,7 +89,41 @@ def _build_search_queries(task: str, persona: dict) -> list[str]:
 # Analysis prompt
 # ---------------------------------------------------------------------------
 
-RESEARCH_PROMPT_TEMPLATE = """你是一位专业的内容研究员。请基于以下搜索结果，针对任务进行深入分析。
+# ---------------------------------------------------------------------------
+# Stage 1 prompt: Data Collector — extract structured facts (Gemini)
+# ---------------------------------------------------------------------------
+
+EXTRACT_PROMPT_TEMPLATE = """你是一位专业的数据采集员。请从以下搜索结果中提取与任务相关的关键信息。
+
+## 任务
+{task}
+
+## 搜索结果
+{search_results}
+
+## 要求
+- 提取所有与任务直接相关的事实、数据点、政策条文和引用
+- 保留数据来源 URL
+- 按重要程度排序
+- 不要做分析判断，只做信息提取和整理
+
+请以 JSON 格式输出：
+```json
+{{
+  "extracted_facts": [
+    {{"fact": "事实描述", "source_url": "来源URL", "importance": "high/medium/low"}},
+    ...
+  ],
+  "raw_data_points": ["数据1", "数据2", ...],
+  "source_count": 0
+}}
+```"""
+
+# ---------------------------------------------------------------------------
+# Stage 2 prompt: Logic Analyst — deep analysis (Claude Opus)
+# ---------------------------------------------------------------------------
+
+ANALYSIS_PROMPT_TEMPLATE = """你是一位逻辑严密的深度分析师。请基于以下已提取的事实数据，进行深入分析。
 
 ## 任务
 {task}
@@ -117,16 +131,16 @@ RESEARCH_PROMPT_TEMPLATE = """你是一位专业的内容研究员。请基于�
 ## 目标受众
 {audience}
 
-## 搜索结果
-{search_results}
+## 已提取的事实数据
+{extracted_facts}
 
 ## 要求
-1. 提取与任务直接相关的关键信息和数据点
+1. 基于事实数据进行严密的逻辑推理，不要编造信息
 2. 识别目标受众最关心的核心痛点
-3. 总结 3-5 个可用于内容创作的核心观点
-4. 标注信息来源（URL）
+3. 提炼 3-5 个有数据支撑的内容观点
+4. 每个观点必须有对应的事实依据
 
-请以 JSON 格式输出，结构如下：
+请以 JSON 格式输出：
 ```json
 {{
   "key_facts": ["事实1", "事实2", ...],
@@ -157,15 +171,18 @@ def _format_search_results(results: list[dict]) -> str:
 
 def _parse_research_response(text: str) -> dict:
     """Extract JSON from the LLM research response."""
-    # Try to extract JSON block
-    if "```json" in text:
-        start = text.index("```json") + 7
-        end = text.index("```", start)
-        text = text[start:end].strip()
-    elif "```" in text:
-        start = text.index("```") + 3
-        end = text.index("```", start)
-        text = text[start:end].strip()
+    # Try to extract JSON from code-fenced block
+    for fence in ("```json", "```"):
+        if fence in text:
+            start = text.index(fence) + len(fence)
+            end = text.find("```", start)
+            text = text[start:end].strip() if end != -1 else text[start:].strip()
+            break
+    else:
+        # No code fence — try to find a raw JSON object
+        brace = text.find("{")
+        if brace != -1:
+            text = text[brace:]
 
     try:
         return json.loads(text)
@@ -216,21 +233,29 @@ async def _xhs_search(
 # ---------------------------------------------------------------------------
 
 async def multi_vlm_research(state: AgentState) -> dict:
-    """Graph node: perform research using dynamically selected models."""
+    """Graph node: two-stage research using role-specific models.
+
+    Stage 1 (data_collector / Gemini): Extract structured facts from search results.
+    Stage 2 (logic_analyst / Claude Opus): Deep analysis of extracted facts.
+    """
     task = state["task"]
     persona = state["persona"]
     track = persona.get("track", "")
     memory = state.get("memory", [])
 
     task_type = _classify_task(task, track)
-    primary_model, fallback_model = _select_model(task_type, persona)
+    router = ModelRouter(persona)
+    ctx = {"task_type": task_type}
+    rc_collector = router.route("data_collector", ctx)
+    rc_analyst = router.route("logic_analyst", ctx)
 
     logger.info(
-        "[Node 2] Research — task_type=%s, model=%s, fallback=%s",
-        task_type, primary_model, fallback_model,
+        "[Node 2] Research — task_type=%s, collector=%s(temp=%.2f), analyst=%s(temp=%.2f)",
+        task_type, rc_collector.model, rc_collector.temperature,
+        rc_analyst.model, rc_analyst.temperature,
     )
 
-    # 1a. External web search (Tavily)
+    # ── 1. Data gathering (API-based, no LLM) ──
     queries = _build_search_queries(task, persona)
     all_search_results: list[dict] = []
     data_sources: list[str] = []
@@ -241,10 +266,10 @@ async def multi_vlm_research(state: AgentState) -> dict:
         if results:
             data_sources.append(f"tavily:{query}")
 
-    # 1b. XHS in-app search (competitor / trending notes)
+    # XHS in-app search
     try:
         adapter = get_adapter_for_account(persona)
-        for query in queries[:1]:  # use primary query only
+        for query in queries[:1]:
             xhs_results = await _xhs_search(adapter, query)
             all_search_results.extend(xhs_results)
             if xhs_results:
@@ -260,12 +285,39 @@ async def multi_vlm_research(state: AgentState) -> dict:
             seen_urls.add(r["url"])
             unique_results.append(r)
 
-    # 2. Build analysis prompt
+    # ── 2. Stage 1: Data Collector — extract facts (Gemini, large context) ──
+    extract_prompt = EXTRACT_PROMPT_TEMPLATE.format(
+        task=task,
+        search_results=_format_search_results(unique_results[:10]),
+    )
+
+    raw_extraction = await router.invoke("data_collector", extract_prompt, context=ctx)
+    extraction = _parse_research_response(raw_extraction)
+
+    logger.info(
+        "[Node 2] Stage 1 (data_collector=%s) extracted %d facts.",
+        rc_collector.model,
+        len(extraction.get("extracted_facts", extraction.get("key_facts", []))),
+    )
+
+    # ── 3. Stage 2: Logic Analyst — deep analysis (Claude Opus) ──
     audience = persona.get("persona", {}).get("audience", "通用读者")
-    prompt = RESEARCH_PROMPT_TEMPLATE.format(
+
+    # Format extracted facts for the analyst
+    facts_list = extraction.get("extracted_facts", [])
+    if facts_list:
+        facts_text = "\n".join(
+            f"- [{f.get('importance', 'medium')}] {f.get('fact', str(f))} (来源: {f.get('source_url', 'N/A')})"
+            for f in facts_list
+        )
+    else:
+        # Fallback: use raw extraction summary
+        facts_text = extraction.get("summary", json.dumps(extraction, ensure_ascii=False)[:2000])
+
+    analysis_prompt = ANALYSIS_PROMPT_TEMPLATE.format(
         task=task,
         audience=audience,
-        search_results=_format_search_results(unique_results[:8]),
+        extracted_facts=facts_text,
     )
 
     # Inject relevant memory as context
@@ -281,27 +333,32 @@ async def multi_vlm_research(state: AgentState) -> dict:
             )
             system_prompt += f"\n\n## 历史成功经验（供参考）\n{memory_ctx}"
 
-    # 3. Invoke LLM with fallback
-    raw_response = await ModelAdapter.invoke_with_fallback(
-        primary_model,
-        fallback_model,
-        prompt,
+    raw_analysis = await router.invoke(
+        "logic_analyst", analysis_prompt,
+        context=ctx,
         system_prompt=system_prompt,
-        temperature=0.3,
-        max_tokens=4096,
     )
 
-    # 4. Parse structured results
-    analysis = _parse_research_response(raw_response)
+    analysis = _parse_research_response(raw_analysis)
+
+    logger.info(
+        "[Node 2] Stage 2 (logic_analyst=%s) — %d content angles.",
+        rc_analyst.model,
+        len(analysis.get("content_angles", [])),
+    )
 
     research_results = [
         {
             "type": "web_search_analysis",
             "task_type": task_type,
-            "model_used": primary_model,
+            "models_used": {
+                "data_collector": rc_collector.model,
+                "logic_analyst": rc_analyst.model,
+            },
             "raw_search_count": len(unique_results),
+            "extraction": extraction,
             "analysis": analysis,
-            "raw_sources": unique_results[:8],
+            "raw_sources": unique_results[:10],
         }
     ]
 

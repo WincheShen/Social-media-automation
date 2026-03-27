@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from src.graph.state import AgentState
-from src.infra.model_adapter import ModelAdapter
+from src.infra.model_adapter import ModelRouter
 
 logger = logging.getLogger(__name__)
 
@@ -87,13 +87,10 @@ async def _generate_insight(state: AgentState, outcome_type: str) -> str | None:
         extra_detail=extra_detail,
     )
 
+    router = ModelRouter(persona)
+
     try:
-        insight = await ModelAdapter.invoke(
-            "gemini-1.5-flash",
-            prompt,
-            temperature=0.3,
-            max_tokens=256,
-        )
+        insight = await router.invoke("strategist", prompt)
         return insight.strip()
     except Exception as e:
         logger.warning("[Node 8] Failed to generate insight: %s", e)

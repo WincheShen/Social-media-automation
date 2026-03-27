@@ -16,8 +16,11 @@ track: "老年生活"
 keywords: ["养生", "防诈骗", "健康", "怀旧", "退休", "老年", "食疗"]
 
 models:
-  primary: "gemini-1.5-flash"
-  fallback: "gemini-1.5-flash"
+  data_collector: gemini-2.5-flash
+  logic_analyst: claude-3.7-opus
+  copywriter: claude-3.7-sonnet
+  strategist: gpt-4o
+  fallback: gemini-2.5-flash
   image_gen: "nano-banana-2"
 
 visual_style:

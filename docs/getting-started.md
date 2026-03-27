@@ -51,7 +51,7 @@ XHS_SKILLS_DIR=vendor/xiaohongshu-skills
 #### GOOGLE_API_KEY（必填）
 
 - **用途：** 调用 Google Gemini 大模型，负责内容研究、文案生成、反馈分析
-- **哪些账号用：** XHS_01（gemini-1.5-pro）、XHS_03（gemini-1.5-flash），以及作为 XHS_02 的 fallback
+- **哪些账号用：** XHS_01（gemini-2.5-pro）、XHS_03（gemini-2.5-flash），以及作为 XHS_02 的 fallback
 - **获取：** [Google AI Studio](https://aistudio.google.com/apikey) → 创建 API Key
 - **免费额度：** 每分钟 15 次请求（足够单账号运营）
 
@@ -69,7 +69,7 @@ XHS_SKILLS_DIR=vendor/xiaohongshu-skills
 
 - **用途：** 调用 Anthropic Claude 大模型
 - **哪些账号用：** **仅 XHS_02**（老K侃股 / 股票分析师）。选 Claude 是因为它在金融数据的严谨推理上表现更好
-- **如果不配：** XHS_02 会自动 fallback 到 `gemini-1.5-pro`，也能用，只是金融分析质量略有下降
+- **如果不配：** XHS_02 会自动 fallback 到 `gemini-2.5-pro`，也能用，只是金融分析质量略有下降
 - **获取：** [console.anthropic.com](https://console.anthropic.com/) → API Keys
 - **结论：** 如果你只跑 XHS_01 或 XHS_03，**完全不需要这个 Key**
 
@@ -77,9 +77,9 @@ XHS_SKILLS_DIR=vendor/xiaohongshu-skills
 
 | 账号 | 人设 | 主模型 | Fallback | 需要的 Key |
 |------|------|--------|----------|-----------|
-| XHS_01 | 学霸学长（上海中考） | gemini-1.5-pro | gemini-1.5-flash | GOOGLE_API_KEY |
-| XHS_02 | 老K侃股（股票分析） | claude-3.7-sonnet | gemini-1.5-pro | ANTHROPIC_API_KEY + GOOGLE_API_KEY |
-| XHS_03 | 暖心小棉袄（老年生活） | gemini-1.5-flash | gemini-1.5-flash | GOOGLE_API_KEY |
+| XHS_01 | 学霸学长（上海中考） | gemini-2.5-pro | gemini-2.5-flash | GOOGLE_API_KEY |
+| XHS_02 | 老K侃股（股票分析） | claude-3.7-sonnet | gemini-2.5-pro | ANTHROPIC_API_KEY + GOOGLE_API_KEY |
+| XHS_03 | 暖心小棉袄（老年生活） | gemini-2.5-flash | gemini-2.5-flash | GOOGLE_API_KEY |
 
 ## 4. 扫码登录
 

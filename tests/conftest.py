@@ -20,8 +20,11 @@ def sample_persona() -> dict:
             "system_prompt": "你是一位教育博主。",
         },
         "models": {
-            "primary": "gemini-1.5-pro",
-            "fallback": "gemini-1.5-flash",
+            "data_collector": "gemini-2.5-pro",
+            "logic_analyst": "claude-3.7-opus",
+            "copywriter": "claude-3.7-sonnet",
+            "strategist": "gpt-4o",
+            "fallback": "gemini-2.5-flash",
         },
         "visual_style": {
             "color_scheme": ["#1a73e8", "#ffffff", "#f0f4f9"],

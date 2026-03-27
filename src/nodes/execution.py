@@ -16,12 +16,15 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 
 from src.graph.state import AgentState
 from src.infra.xhs_cli import XhsCliAdapter, get_adapter_for_account
 from src.infra.xhs_cli_types import XhsNotLoggedInError, XhsCliError
 
 logger = logging.getLogger(__name__)
+
+ASSETS_DIR = Path("data/assets")
 
 
 async def _ensure_login(adapter: XhsCliAdapter, account_id: str) -> bool:
@@ -42,6 +45,37 @@ async def _ensure_login(adapter: XhsCliAdapter, account_id: str) -> bool:
     return False
 
 
+def _generate_default_cover(title: str, account_id: str) -> str | None:
+    """Generate a simple default cover image when no visual assets exist."""
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        logger.warning("[Node 6] Pillow not available, cannot generate default cover.")
+        return None
+
+    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    out_dir = ASSETS_DIR / account_id / date_str
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "default_cover.png"
+
+    width, height = 1080, 1440
+    img = Image.new("RGB", (width, height), "#f0f4f9")
+    draw = ImageDraw.Draw(img)
+
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/PingFang.ttc", 56)
+    except (OSError, IOError):
+        font = ImageFont.load_default()
+
+    # Draw title centered
+    draw.rectangle([0, 0, width, 200], fill="#1a73e8")
+    draw.text((60, 60), title[:18], fill="#ffffff", font=font)
+
+    img.save(str(out_path), "PNG")
+    logger.info("[Node 6] Generated default cover: %s", out_path)
+    return str(out_path)
+
+
 async def _publish_via_cli(
     adapter: XhsCliAdapter,
     state: AgentState,
@@ -56,7 +90,16 @@ async def _publish_via_cli(
     title = state.get("draft_title", "")
     content = state.get("draft_content", "")
     tags = state.get("draft_tags", [])
-    images = state.get("visual_assets", [])
+    images = list(state.get("visual_assets", []))
+
+    # 小红书 requires at least one image
+    if not images:
+        account_id = state.get("account_id", "default")
+        cover = _generate_default_cover(title, account_id)
+        if cover:
+            images = [cover]
+        else:
+            return {"status": "failed", "url": None, "error": "no_images"}
 
     # Append tags to content body (小红书 convention)
     if tags:

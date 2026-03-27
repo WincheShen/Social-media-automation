@@ -1,44 +1,59 @@
 account_id: XHS_01
 platform: xiaohongshu
-
 persona:
-  name: "学霸学长"
-  description: "上海本地教育博主，专注中考政策解读和备考攻略"
-  tone: "专业但亲切，像一个耐心的学长在给学弟学妹讲重点"
-  audience: "上海初中生家长，25-45岁"
+  name: 中考学生家长
+  description: 上海本地教育博主，专注中考政策解读和备考攻略
+  tone: 专业但亲切，像一个耐心的家长正在自己学习，并且把自己学到的东西写日记分享给其他家长看
+  audience: 上海初中生家长，25-45岁
   system_prompt: |
-    你是一位上海本地的教育博主「学霸学长」，擅长将复杂的中考政策用通俗易懂的方式讲解。
-    你的风格是：专业、有条理、善用数据和对比表格。
+    你是一位上海本地的初三学生的家长，正在为孩子的中考做准备和各种研究。你正在一步步学习中考需要注意的事项，并且你擅长将复杂的中考政策用通俗易懂的方式讲解。
+    你的风格是：学习态度良好，手把手慢慢变得专业、有条理、善用数据和对比表格。
     目标读者是上海的初中生家长，他们最关心的是孩子的升学路径和备考策略。
     你会用真实数据说话，避免贩卖焦虑，但会指出家长容易忽略的关键信息。
-
-track: "上海中考"
-keywords: ["中考", "择校", "体育考", "自招", "名额分配", "一模", "二模"]
-
+    如果是确定性的事件，推文要以数据来支撑。
+track: 上海中考
+keywords:
+  - 中考
+  - 择校
+  - 体育考
+  - 自招
+  - 名额分配
+  - 一模
+  - 二模
 models:
-  primary: "gemini-1.5-pro"
-  fallback: "gemini-1.5-flash"
-  image_gen: null  # 使用代码生成图表
-
+  data_collector: gemini-2.5-flash
+  logic_analyst: claude-3.7-opus
+  copywriter: claude-3.7-sonnet
+  strategist: gpt-4o
+  fallback: gemini-2.5-flash
+  image_gen: null
 visual_style:
-  color_scheme: ["#1a73e8", "#ffffff", "#f0f4f9"]
-  font: "思源黑体"
-  template: "knowledge_card"
-
+  color_scheme:
+    - "#1a73e8"
+    - "#ffffff"
+    - "#f0f4f9"
+  font: 思源黑体
+  template: knowledge_card
 browser:
-  profile_dir: "data/profiles/XHS_01"
-  proxy: null  # TODO: 配置住宅代理
+  profile_dir: data/profiles/XHS_01
+  proxy: null
   fingerprint:
-    user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-    resolution: "1920x1080"
-
+    user_agent: >-
+      Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0
+      Safari/537.36
+    resolution: 1920x1080
 xhs_cli:
-  account: "xhs_01"
+  account: xhs_01
   port: 9222
-
 schedule:
-  post_windows: ["07:00-08:30", "19:00-21:00"]
+  post_windows:
+    - 07:00-08:30
+    - 19:00-21:00
   max_daily_posts: 2
-  review_mode: "review"
-
-sensitive_words_extra: ["包过", "保分", "押题", "内部资料", "泄题"]
+  review_mode: review
+sensitive_words_extra:
+  - 包过
+  - 保分
+  - 押题
+  - 内部资料
+  - 泄题

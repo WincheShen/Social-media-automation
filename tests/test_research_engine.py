@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, patch, MagicMock
 
 from src.nodes.research_engine import (
     _classify_task,
-    _select_model,
     _build_search_queries,
     _format_search_results,
     _parse_research_response,
     multi_vlm_research,
 )
+from src.infra.model_adapter import get_role_model, get_fallback_model, ModelRouter
 
 
 class TestClassifyTask:
@@ -35,30 +35,103 @@ class TestClassifyTask:
         assert _classify_task("推荐几本好书", "") == "general"
 
 
-class TestSelectModel:
-    """Test model selection based on task type and persona config."""
+class TestRoleModelRouting:
+    """Test per-role model routing via get_role_model."""
 
-    def test_policy_uses_gemini_pro(self):
-        persona = {"models": {"primary": "gemini-1.5-flash", "fallback": "gemini-1.5-flash"}}
-        primary, fallback = _select_model("policy_analysis", persona)
-        assert primary == "gemini-1.5-pro"
-        assert fallback == "gemini-1.5-flash"
+    def test_explicit_roles(self):
+        persona = {"models": {
+            "data_collector": "gemini-2.5-pro",
+            "logic_analyst": "claude-3.7-opus",
+            "copywriter": "claude-3.7-sonnet",
+            "strategist": "gpt-4o",
+            "fallback": "gemini-2.5-flash",
+        }}
+        assert get_role_model(persona, "data_collector") == "gemini-2.5-pro"
+        assert get_role_model(persona, "logic_analyst") == "claude-3.7-opus"
+        assert get_role_model(persona, "copywriter") == "claude-3.7-sonnet"
+        assert get_role_model(persona, "strategist") == "gpt-4o"
+        assert get_fallback_model(persona) == "gemini-2.5-flash"
 
-    def test_market_uses_claude(self):
-        persona = {"models": {"primary": "gemini-1.5-pro", "fallback": "gemini-1.5-flash"}}
-        primary, fallback = _select_model("market_analysis", persona)
-        assert primary == "claude-3.7-sonnet"
+    def test_legacy_primary_fallback(self):
+        """Old-style config with only primary/fallback should still work."""
+        persona = {"models": {"primary": "gemini-2.5-pro", "fallback": "gemini-2.5-flash"}}
+        assert get_role_model(persona, "data_collector") == "gemini-2.5-pro"
+        assert get_role_model(persona, "copywriter") == "gemini-2.5-pro"
+        assert get_fallback_model(persona) == "gemini-2.5-flash"
 
-    def test_general_uses_persona_primary(self):
-        persona = {"models": {"primary": "gemini-1.5-flash", "fallback": "gemini-1.5-flash"}}
-        primary, fallback = _select_model("general", persona)
-        assert primary == "gemini-1.5-flash"
-
-    def test_missing_models_config(self):
+    def test_missing_models_uses_defaults(self):
         persona = {}
-        primary, fallback = _select_model("general", persona)
-        assert primary == "gemini-1.5-pro"
-        assert fallback == "gemini-1.5-flash"
+        assert get_role_model(persona, "data_collector") == "gemini-2.5-pro"
+        assert get_role_model(persona, "logic_analyst") == "claude-3.7-opus"
+        assert get_role_model(persona, "copywriter") == "claude-3.7-sonnet"
+        assert get_role_model(persona, "strategist") == "gpt-4o"
+        assert get_fallback_model(persona) == "gemini-2.5-flash"
+
+
+class TestModelRouter:
+    """Test ModelRouter track-aware routing."""
+
+    def test_zhongkao_policy_boosts_gemini_temp(self):
+        """上海中考 + policy_analysis → data_collector temp lowered to 0.15."""
+        persona = {
+            "track": "上海中考",
+            "models": {
+                "data_collector": "gemini-2.5-pro",
+                "logic_analyst": "claude-3.7-opus",
+                "fallback": "gemini-2.5-flash",
+            },
+        }
+        router = ModelRouter(persona)
+        rc = router.route("data_collector", {"task_type": "policy_analysis"})
+        assert rc.model == "gemini-2.5-pro"
+        assert rc.temperature == 0.15
+        assert "政策条文" in rc.system_prompt_suffix
+
+    def test_zhongkao_analyst_gets_suffix(self):
+        persona = {"track": "上海中考", "models": {"fallback": "gemini-2.5-flash"}}
+        router = ModelRouter(persona)
+        rc = router.route("logic_analyst")
+        assert rc.temperature == 0.25
+        assert "家长" in rc.system_prompt_suffix
+
+    def test_elderly_copywriter_warm_temp(self):
+        """老年生活 → copywriter temp raised to 0.9."""
+        persona = {
+            "track": "老年生活",
+            "models": {
+                "copywriter": "claude-3.7-sonnet",
+                "fallback": "gemini-2.5-flash",
+            },
+        }
+        router = ModelRouter(persona)
+        rc = router.route("copywriter")
+        assert rc.model == "claude-3.7-sonnet"
+        assert rc.temperature == 0.9
+        assert "温暖" in rc.system_prompt_suffix
+
+    def test_finance_conservative_copywriter(self):
+        persona = {"track": "finance", "models": {"fallback": "gemini-2.5-pro"}}
+        router = ModelRouter(persona)
+        rc = router.route("copywriter")
+        assert rc.temperature == 0.6
+        assert "免责声明" in rc.system_prompt_suffix
+
+    def test_no_track_uses_base_params(self):
+        """No track match → role base params unchanged."""
+        persona = {
+            "track": "旅游",
+            "models": {"copywriter": "claude-3.7-sonnet", "fallback": "gemini-2.5-flash"},
+        }
+        router = ModelRouter(persona)
+        rc = router.route("copywriter")
+        assert rc.temperature == 0.8  # base for copywriter
+        assert rc.system_prompt_suffix == ""
+
+    def test_fallback_resolved(self):
+        persona = {"models": {"fallback": "gemini-2.0-flash"}}
+        router = ModelRouter(persona)
+        rc = router.route("strategist")
+        assert rc.fallback == "gemini-2.0-flash"
 
 
 class TestBuildSearchQueries:
@@ -133,13 +206,26 @@ class TestMultiVlmResearchNode:
             "summary": "2026年上海中考体育新规主要调整了耐力跑标准",
         })
 
+        # Stage 1 extraction response
+        extraction_response = json.dumps({
+            "extracted_facts": [
+                {"fact": "耐力跑标准降低10秒", "source_url": "https://edu.sh.cn/1", "importance": "high"},
+            ],
+            "raw_data_points": ["耐力跑标准变化"],
+            "source_count": 1,
+        })
+
         state = {
             "account_id": "XHS_01",
             "task": "分析 2026 上海体育中考新规",
             "persona": {
                 "track": "上海中考",
                 "keywords": ["中考", "择校", "体育考"],
-                "models": {"primary": "gemini-1.5-pro", "fallback": "gemini-1.5-flash"},
+                "models": {
+                    "data_collector": "gemini-2.5-pro",
+                    "logic_analyst": "claude-3.7-opus",
+                    "fallback": "gemini-2.5-flash",
+                },
                 "persona": {
                     "audience": "上海初中生家长",
                     "system_prompt": "你是教育博主",
@@ -155,9 +241,9 @@ class TestMultiVlmResearchNode:
                 return_value=mock_search_results,
             ),
             patch(
-                "src.nodes.research_engine.ModelAdapter.invoke_with_fallback",
+                "src.infra.model_adapter.ModelAdapter.invoke_with_fallback",
                 new_callable=AsyncMock,
-                return_value=llm_response,
+                side_effect=[extraction_response, llm_response],
             ),
         ):
             result = await multi_vlm_research(state)
@@ -166,3 +252,7 @@ class TestMultiVlmResearchNode:
         analysis = result["research_results"][0]["analysis"]
         assert "耐力跑" in analysis["key_facts"][0]
         assert len(result["data_sources"]) > 0
+        # Verify two-stage model routing
+        models_used = result["research_results"][0]["models_used"]
+        assert models_used["data_collector"] == "gemini-2.5-pro"
+        assert models_used["logic_analyst"] == "claude-3.7-opus"
