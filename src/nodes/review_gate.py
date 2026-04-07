@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -147,10 +148,23 @@ async def review_gate(state: AgentState) -> dict:
         return {"approved": True}
 
     # review mode — human in the loop
+    # When running as a web subprocess (no TTY), skip terminal interaction.
+    # The web UI handles approve/reject via API instead.
+    if not sys.stdin.isatty():
+        logger.info(
+            "[Node 5] Non-interactive mode detected (web subprocess). "
+            "Returning approved=False — web UI will handle review."
+        )
+        return {"approved": False}
+
     _display_review(state)
 
     print("\n  操作: [a]pprove 确认发布 | [r]eject 拒绝 | [e]dit 修改后重试")
-    user_input = input("  请输入: ").strip().lower()
+    try:
+        user_input = input("  请输入: ").strip().lower()
+    except EOFError:
+        logger.warning("[Node 5] stdin closed unexpectedly, treating as rejection.")
+        return {"approved": False}
 
     if user_input in ("a", "approve"):
         logger.info("[Node 5] Content approved by human reviewer.")

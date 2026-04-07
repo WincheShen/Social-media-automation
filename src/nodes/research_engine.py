@@ -134,7 +134,7 @@ ANALYSIS_PROMPT_TEMPLATE = """你是一位逻辑严密的深度分析师。请�
 ## 已提取的事实数据
 {extracted_facts}
 
-## 要求
+{strategy_section}## 要求
 1. 基于事实数据进行严密的逻辑推理，不要编造信息
 2. 识别目标受众最关心的核心痛点
 3. 提炼 3-5 个有数据支撑的内容观点
@@ -243,7 +243,14 @@ async def multi_vlm_research(state: AgentState) -> dict:
     track = persona.get("track", "")
     memory = state.get("memory", [])
 
-    task_type = _classify_task(task, track)
+    # Use analyst's suggested topic if available (from Node 1.5)
+    suggested_topic = state.get("suggested_topic") or task
+    traffic_analysis = state.get("traffic_analysis") or {}
+
+    if suggested_topic != task:
+        logger.info("[Node 2] Using analyst-suggested topic: %s", suggested_topic)
+
+    task_type = _classify_task(suggested_topic, track)
     router = ModelRouter(persona)
     ctx = {"task_type": task_type}
     rc_collector = router.route("data_collector", ctx)
@@ -256,7 +263,7 @@ async def multi_vlm_research(state: AgentState) -> dict:
     )
 
     # ── 1. Data gathering (API-based, no LLM) ──
-    queries = _build_search_queries(task, persona)
+    queries = _build_search_queries(suggested_topic, persona)
     all_search_results: list[dict] = []
     data_sources: list[str] = []
 
@@ -287,7 +294,7 @@ async def multi_vlm_research(state: AgentState) -> dict:
 
     # ── 2. Stage 1: Data Collector — extract facts (Gemini, large context) ──
     extract_prompt = EXTRACT_PROMPT_TEMPLATE.format(
-        task=task,
+        task=suggested_topic,
         search_results=_format_search_results(unique_results[:10]),
     )
 
@@ -314,10 +321,18 @@ async def multi_vlm_research(state: AgentState) -> dict:
         # Fallback: use raw extraction summary
         facts_text = extraction.get("summary", json.dumps(extraction, ensure_ascii=False)[:2000])
 
+    # Inject content strategy from traffic analyst if available
+    strategy_section = ""
+    content_strategy = traffic_analysis.get("content_strategy", [])
+    if content_strategy:
+        strategy_lines = "\n".join(f"- {s}" for s in content_strategy)
+        strategy_section = f"## 流量分析师内容策略建议\n{strategy_lines}\n\n"
+
     analysis_prompt = ANALYSIS_PROMPT_TEMPLATE.format(
-        task=task,
+        task=suggested_topic,
         audience=audience,
         extracted_facts=facts_text,
+        strategy_section=strategy_section,
     )
 
     # Inject relevant memory as context

@@ -19,11 +19,11 @@ keywords:
   - ETF
   - 大盘
 models:
-  data_collector: gemini-2.5-pro
-  logic_analyst: claude-3.7-opus
-  copywriter: claude-3.7-sonnet
-  strategist: gpt-4o
-  fallback: gemini-2.5-pro
+  data_collector: gpt-5.3-chat
+  logic_analyst: gpt-5.3-chat
+  copywriter: gpt-5.3-chat
+  strategist: gpt-5.3-chat
+  fallback: gemini-2.5-flash
   image_gen: null
 visual_style:
   color_scheme:

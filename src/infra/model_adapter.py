@@ -11,6 +11,7 @@ import asyncio
 import base64
 import logging
 import os
+import random
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -497,14 +498,21 @@ class ClaudeClient(BaseModelClient):
 # ---------------------------------------------------------------------------
 
 class OpenAIClient(BaseModelClient):
-    """OpenAI GPT API client using the official SDK."""
+    """OpenAI GPT API client using the official SDK. Supports Azure OpenAI via base_url."""
 
     def __init__(self, model_name: str = "gpt-4o"):
         self.model_name = model_name
         api_key = os.getenv("OPENAI_API_KEY")
+        base_url = os.getenv("OPENAI_BASE_URL")
+        self._use_azure = bool(base_url)
         if not api_key:
             logger.warning("OPENAI_API_KEY not set — GPT calls will fail.")
-        self._client = openai.AsyncOpenAI(api_key=api_key or "")
+        # Support custom base_url for Azure OpenAI or other OpenAI-compatible endpoints
+        if base_url:
+            self._client = openai.AsyncOpenAI(api_key=api_key or "", base_url=base_url)
+            logger.info("OpenAI client using custom base_url: %s", base_url)
+        else:
+            self._client = openai.AsyncOpenAI(api_key=api_key or "")
 
     async def invoke(self, prompt: str, **kwargs: Any) -> str:
         system_prompt = kwargs.get("system_prompt", "")
@@ -517,12 +525,20 @@ class OpenAIClient(BaseModelClient):
         messages.append({"role": "user", "content": prompt})
 
         t0 = time.monotonic()
-        response = await self._client.chat.completions.create(
-            model=self.model_name,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
+        # Azure OpenAI uses max_completion_tokens and may not support temperature
+        if self._use_azure:
+            response = await self._client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                max_completion_tokens=max_tokens,
+            )
+        else:
+            response = await self._client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
         latency_ms = (time.monotonic() - t0) * 1000
 
         text = response.choices[0].message.content or "" if response.choices else ""
@@ -561,11 +577,19 @@ class OpenAIClient(BaseModelClient):
         messages.append({"role": "user", "content": content})
 
         t0 = time.monotonic()
-        response = await self._client.chat.completions.create(
-            model=self.model_name,
-            messages=messages,
-            max_tokens=max_tokens,
-        )
+        # Azure OpenAI uses max_completion_tokens instead of max_tokens
+        if self._use_azure:
+            response = await self._client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                max_completion_tokens=max_tokens,
+            )
+        else:
+            response = await self._client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                max_tokens=max_tokens,
+            )
         latency_ms = (time.monotonic() - t0) * 1000
 
         text = response.choices[0].message.content or "" if response.choices else ""
@@ -620,28 +644,111 @@ class ModelAdapter:
         primary: str,
         fallback: str,
         prompt: str,
-        max_retries: int = 3,
+        max_retries: int = 4,
         **kwargs: Any,
     ) -> str:
-        """Invoke primary model with exponential backoff, fall back on exhaustion."""
+        """Invoke primary → fallback → gemini-2.5-flash with per-tier retries.
+
+        Retry schedule (overload errors):  5 → 15 → 45 → 90 s
+        Retry schedule (other errors):     2 → 4  → 8  → 16 s
+        Concurrency is capped by _INVOKE_SEMAPHORE to avoid piling on.
+        """
+        sem = _get_semaphore()
         last_error: Exception | None = None
+
+        # ── Tier 1: primary model ─────────────────────────────────────────────
         for attempt in range(max_retries):
             try:
-                return await cls.invoke(primary, prompt, **kwargs)
+                async with sem:
+                    return await cls.invoke(primary, prompt, **kwargs)
             except Exception as e:
                 last_error = e
-                wait = min(2 ** attempt, 30)  # 1s, 2s, 4s … cap 30s
+                overload = _is_overload_error(e)
+                wait = _retry_delay(attempt, overload)
                 logger.warning(
-                    "Model %s failed (attempt %d/%d): %s — retrying in %ds",
-                    primary, attempt + 1, max_retries, e, wait,
+                    "[Retry] %s attempt %d/%d %s — wait %.0fs | %s",
+                    primary, attempt + 1, max_retries,
+                    "(overload)" if overload else "", wait, e,
                 )
                 await asyncio.sleep(wait)
 
+        # ── Tier 2: fallback model (2 retries) ────────────────────────────────
         logger.warning(
-            "Primary model %s exhausted retries. Falling back to %s. Last error: %s",
-            primary, fallback, last_error,
+            "Primary %s exhausted %d retries → fallback %s. Last: %s",
+            primary, max_retries, fallback, last_error,
         )
-        return await cls.invoke(fallback, prompt, **kwargs)
+        if fallback != primary:
+            for attempt in range(2):
+                try:
+                    async with sem:
+                        return await cls.invoke(fallback, prompt, **kwargs)
+                except Exception as e:
+                    last_error = e
+                    wait = _retry_delay(attempt, _is_overload_error(e))
+                    logger.warning(
+                        "[Retry] fallback %s attempt %d/2 — wait %.0fs | %s",
+                        fallback, attempt + 1, wait, e,
+                    )
+                    await asyncio.sleep(wait)
+
+        # ── Tier 3: absolute last resort — gemini-2.5-flash ──────────────────
+        last_resort = "gemini-2.5-flash"
+        if last_resort not in (primary, fallback):
+            logger.warning(
+                "Fallback %s also failed → last resort %s. Last: %s",
+                fallback, last_resort, last_error,
+            )
+            try:
+                async with sem:
+                    return await cls.invoke(last_resort, prompt, **kwargs)
+            except Exception as e:
+                last_error = e
+
+        raise RuntimeError(
+            f"All model tiers failed ({primary} / {fallback} / {last_resort}). "
+            f"Last error: {last_error}"
+        ) from last_error
+
+
+# ---------------------------------------------------------------------------
+# Concurrency control + retry helpers
+# ---------------------------------------------------------------------------
+
+# Limit simultaneous in-flight LLM calls to avoid thundering-herd 503s.
+_INVOKE_SEMAPHORE: asyncio.Semaphore | None = None
+_SEMAPHORE_LIMIT = 3  # adjust if you add more accounts
+
+
+def _get_semaphore() -> asyncio.Semaphore:
+    global _INVOKE_SEMAPHORE
+    if _INVOKE_SEMAPHORE is None:
+        _INVOKE_SEMAPHORE = asyncio.Semaphore(_SEMAPHORE_LIMIT)
+    return _INVOKE_SEMAPHORE
+
+
+_OVERLOAD_KEYWORDS = ("503", "UNAVAILABLE", "overloaded", "429",
+                      "rate limit", "Rate limit", "Resource exhausted",
+                      "quota", "too many requests", "Too Many Requests")
+
+
+def _is_overload_error(e: Exception) -> bool:
+    """True for transient capacity/quota errors that benefit from longer waits."""
+    msg = str(e)
+    return any(kw in msg for kw in _OVERLOAD_KEYWORDS)
+
+
+def _retry_delay(attempt: int, overload: bool) -> float:
+    """Exponential backoff with ±20 % jitter.
+
+    Overload (503/429):  5 → 15 → 45 → 90s
+    Other errors:        2 → 4  → 8  → 16s
+    """
+    if overload:
+        base = min(5 * (3 ** attempt), 90)
+    else:
+        base = min(2 ** (attempt + 1), 30)
+    jitter = base * 0.20 * (2 * random.random() - 1)
+    return max(1.0, base + jitter)
 
 
 def init_models() -> None:
@@ -653,10 +760,19 @@ def init_models() -> None:
     # Claude
     ModelAdapter.register("claude-3.7-sonnet", ClaudeClient("claude-sonnet-4-20250514"))
     ModelAdapter.register("claude-3.7-opus", ClaudeClient("claude-3-opus-20240229"))
-    # OpenAI
+    # OpenAI / Azure OpenAI
     if os.getenv("OPENAI_API_KEY"):
-        ModelAdapter.register("gpt-4o", OpenAIClient("gpt-4o"))
-        ModelAdapter.register("gpt-4o-mini", OpenAIClient("gpt-4o-mini"))
+        # Azure deployment name from env, fallback to gpt-4o for standard OpenAI
+        azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5.3-chat")
+        if os.getenv("OPENAI_BASE_URL"):
+            # Azure OpenAI - register with Azure deployment name
+            ModelAdapter.register("gpt-4o", OpenAIClient(azure_deployment))
+            ModelAdapter.register("gpt-5.3-chat", OpenAIClient(azure_deployment))
+            logger.info("Using Azure OpenAI deployment: %s", azure_deployment)
+        else:
+            # Standard OpenAI
+            ModelAdapter.register("gpt-4o", OpenAIClient("gpt-4o"))
+            ModelAdapter.register("gpt-4o-mini", OpenAIClient("gpt-4o-mini"))
     else:
         logger.info("OPENAI_API_KEY not set — skipping GPT model registration.")
     logger.info("All models registered.")

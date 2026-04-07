@@ -12,6 +12,10 @@ class AgentState(TypedDict):
     task: str  # Current task description
     memory: list[dict]  # Historical experience for this account
 
+    # --- Analyst Phase (traffic attribution + topic selection) ---
+    traffic_analysis: Optional[dict]   # Attribution report: high/low performers + reasoning
+    suggested_topic: Optional[str]     # AI-recommended topic for today based on attribution
+
     # --- Research Phase ---
     research_results: list[dict]  # Retrieved materials & analysis
     data_sources: list[str]  # Data sources used
@@ -21,6 +25,7 @@ class AgentState(TypedDict):
     draft_content: str
     draft_tags: list[str]
     visual_assets: list[str]  # Generated image file paths
+    image_gen_prompt: Optional[str]  # Strategist's recommended image generation prompt
 
     # --- Safety Check ---
     safety_passed: bool

@@ -13,6 +13,9 @@ import {
   ExternalLink,
   AlertTriangle,
   Trash2,
+  Sparkles,
+  Copy,
+  CheckCheck,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -23,6 +26,8 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [promptCopied, setPromptCopied] = useState(false);
 
   // Editable fields
   const [title, setTitle] = useState(task.draft_title || "");
@@ -107,6 +112,13 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
     refresh();
   }
 
+  async function handleCopyPrompt() {
+    if (!task.image_gen_prompt) return;
+    await navigator.clipboard.writeText(task.image_gen_prompt);
+    setPromptCopied(true);
+    setTimeout(() => setPromptCopied(false), 2000);
+  }
+
   async function handleDelete() {
     if (!confirm("确定要删除这个任务吗？")) return;
     setDeleting(true);
@@ -114,9 +126,24 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
     if (res.ok) router.push("/tasks");
   }
 
+  async function handleRetry() {
+    setRetrying(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/retry`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        refresh();
+      }
+    } finally {
+      setRetrying(false);
+    }
+  }
+
   const isReviewing = task.status === "reviewing";
   const isRunning = task.status === "running" || task.status === "publishing";
   const hasContent = !!task.draft_title || !!task.draft_content;
+  const hasResearchData = !!task.research_data && task.research_data.research_results?.length > 0;
 
   return (
     <div className="space-y-6">
@@ -171,13 +198,32 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
 
       {/* Error */}
       {task.error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4 flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-red-800">任务失败</p>
-            <p className="text-xs text-red-600 mt-1 font-mono whitespace-pre-wrap">
-              {task.error}
-            </p>
+        <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-800">任务失败</p>
+              <p className="text-xs text-red-600 mt-1 font-mono whitespace-pre-wrap">
+                {task.error}
+              </p>
+              {hasResearchData && (
+                <p className="text-xs text-amber-700 mt-2 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  检测到已有研究数据，重试时将自动复用（节省时间和 API 成本）
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex-shrink-0"
+            >
+              {retrying ? (
+                <><Loader2 className="h-4 w-4 animate-spin" />重试中...</>
+              ) : (
+                <><Check className="h-4 w-4" />智能重试</>
+              )}
+            </button>
           </div>
         </div>
       )}
@@ -336,6 +382,34 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
           <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {task.research_summary}
           </p>
+        </div>
+      )}
+
+      {/* Image generation prompt */}
+      {task.image_gen_prompt && (
+        <div className="bg-card rounded-xl border border-violet-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-violet-100 bg-violet-50 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-violet-600" />
+              <h2 className="font-semibold text-violet-900">策略优化师推荐配图 Prompt</h2>
+            </div>
+            <button
+              onClick={handleCopyPrompt}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-violet-700 hover:bg-violet-100 transition-colors"
+            >
+              {promptCopied ? (
+                <><CheckCheck className="h-3.5 w-3.5" />已复制</>
+              ) : (
+                <><Copy className="h-3.5 w-3.5" />复制 Prompt</>
+              )}
+            </button>
+          </div>
+          <div className="p-5">
+            <p className="text-xs text-violet-500 mb-2">可直接粘贴到 DALL-E 3 / Midjourney / 其他图片生成工具</p>
+            <div className="font-mono text-sm bg-violet-50 border border-violet-100 rounded-lg px-4 py-3 leading-relaxed text-violet-900 whitespace-pre-wrap">
+              {task.image_gen_prompt}
+            </div>
+          </div>
         </div>
       )}
 

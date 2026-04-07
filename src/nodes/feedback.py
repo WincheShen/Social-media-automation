@@ -137,12 +137,23 @@ async def feedback_memory_update(state: AgentState) -> dict:
     # Generate insight via LLM
     insight = await _generate_insight(state, outcome_type)
 
+    # Extract content angle from research results for attribution
+    content_angle = ""
+    research_results = state.get("research_results", [])
+    if research_results:
+        analysis = research_results[0].get("analysis", {})
+        angles = analysis.get("content_angles", [])
+        if angles:
+            content_angle = angles[0].get("angle", "")
+
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "type": outcome_type,
         "task": task,
+        "suggested_topic": state.get("suggested_topic", task),
         "title": state.get("draft_title", ""),
         "tags": state.get("draft_tags", []),
+        "content_angle": content_angle,
         "data_sources": state.get("data_sources", []),
         "detail": detail,
         "insight": insight,

@@ -63,7 +63,9 @@ export interface Task {
   draft_content?: string;
   draft_tags?: string[];
   research_summary?: string;
+  research_data?: any;  // Full research results for retry (research_results, data_sources, etc.)
   safety_issues?: string[];
+  image_gen_prompt?: string;  // Strategist's recommended image generation prompt
   // Publish result (populated after nodes 6-8)
   post_url?: string;
   error?: string;
@@ -83,6 +85,7 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
   { id: "claude-3.7-sonnet", display_name: "Claude 3.7 Sonnet", provider: "anthropic" },
   { id: "gpt-4o", display_name: "GPT-4o", provider: "openai" },
   { id: "gpt-4o-mini", display_name: "GPT-4o Mini", provider: "openai" },
+  { id: "gpt-5.3-chat", display_name: "GPT-5.3 Chat (Azure)", provider: "openai" },
 ];
 
 export const MODEL_ROLES = [

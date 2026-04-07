@@ -124,9 +124,105 @@ flowchart TD
 | **Post Monitor** | CLI | 发布后定时拉取阅读/互动数据 |
 | **Feedback Memory** | SQLite | 将本次表现写回记忆库，影响下次选题和创作策略 |
 
+## 实现状态总览
+
+### ✅ 已完成
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| **Node 1: Context Loader** | ✅ 完成 | 加载账号配置 + 历史记忆 |
+| **Node 1.5: Traffic Analyst** | ✅ 完成 | 流量归因分析 + 选题推荐（基于历史 memory） |
+| **Node 2: Research Engine** | ✅ 完成 | Tavily 外部搜索 + 小红书站内搜索 + 双阶段分析 |
+| **Node 3: Creative Engine** | ✅ 完成 | 拟人化创作 + 角色人设融合 |
+| **Node 4: Safety Check** | ✅ 完成 | 敏感词过滤 + 合规检查 |
+| **Node 5: Review Gate** | ✅ 完成 | 人工审核流程（Web Admin 审批） |
+| **Node 6: Execution** | ✅ 完成 | XhsCliAdapter 三步发布（fill → preview → click） |
+| **Node 7: Monitor** | ⚠️ 部分完成 | 调度任务已写入 SQLite，但**无消费者进程** |
+| **Node 8: Feedback** | ✅ 完成 | 洞察生成 + 记忆持久化 |
+| **Social Interaction** | ⚠️ 已实现未集成 | `social_interaction.py` 独立可用，未接入主循环 |
+| **Web Admin** | ✅ 完成 | 任务管理 / 审批 / 账号配置 |
+| **ModelRouter** | ✅ 完成 | 4 角色路由 + Track 规则 + Azure OpenAI 支持 |
+
+### ❌ 未实现（核心缺口）
+
+| 缺口 | 优先级 | 影响 |
+|------|--------|------|
+| **定时调度器** | 🔴 P0 | 无法实现「每日自动执行」 |
+| **Monitor 消费者** | 🔴 P0 | 发布后数据无法自动回收，反馈循环断裂 |
+| **社交互动集成** | 🟡 P1 | 无法自动点赞/评论引流 |
+| **图片生成** | 🟢 P2 | 目前仅占位封面，无 AI 配图 |
+
+---
+
+## 目标 vs 现状 Gap 分析
+
+### 用户目标
+
+> 1. 系统**每天自己**收集热点 + 收集前一天发布内容的用户反馈 + 生成当天内容
+> 2. 根据自己发布的内容去搜同类文章，**自动点赞或发表评论**来引流
+
+### Gap 1: 每日自动执行循环 🔴
+
+**现状**：
+- 所有任务需要在 Web Admin 手动创建
+- `src/main.py` 是 CLI 入口，需要人工触发
+- 无 cron / scheduler / 定时任务机制
+
+**需要**：
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Daily Scheduler (cron / APScheduler / systemd timer)       │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ 08:00  触发 Monitor 消费者 → 回收 T+24h 数据        │   │
+│  │ 09:00  为每个账号创建当日任务 → 自动进入 workflow   │   │
+│  │ 12:00  触发社交互动 → 点赞/评论同类内容             │   │
+│  │ 20:00  触发 Monitor 消费者 → 回收 T+2h 数据         │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Gap 2: Monitor 数据回收 🔴
+
+**现状**：
+- `monitor.py` 会在发布后将 T+2h/T+24h/T+72h 任务写入 `monitor_tasks.db`
+- **但没有消费者进程**去执行这些任务
+- 数据永远停留在 `pending` 状态
+
+**需要**：
+- `src/scheduler/monitor_worker.py` — 定时扫描 `monitor_tasks.db`，执行到期任务
+- 回收的数据写入 `memory.json`，供 Analyst 做归因分析
+
+### Gap 3: 社交互动引流 🟡
+
+**现状**：
+- `social_interaction.py` 已实现：
+  - `like_notes()` — 批量点赞
+  - `favorite_notes()` — 批量收藏
+  - `comment_on_notes()` — 批量评论
+  - `engage_with_trending()` — 搜索热门 + 互动
+- **未集成进主循环**，需要手动调用
+
+**需要**：
+- 新增 Node 或独立 Job：发布后搜索同类内容 → 点赞/评论
+- 评论内容由 LLM 生成（避免机械感）
+- 防检测：随机延迟、每日上限、行为模式模拟
+
+### Gap 4: 图片生成 🟢
+
+**现状**：
+- `creative_engine.py` 输出 `image_gen_prompt`
+- 无实际调用 DALL-E / Midjourney / 本地 SD
+- 目前仅 Pillow 生成纯色占位封面
+
+**需要**：
+- 对接图片生成 API（DALL-E 3 / Flux / 本地 ComfyUI）
+- 或：从搜索结果中提取配图素材
+
+---
+
 ## 当前缺失 / 待实现
 
 - [ ] **自动触发循环**：目前需要手动在 Web Admin 创建任务，缺少定时调度器（cron/scheduler）
-- [ ] **分析师介入选题**：Logic Analyst 目前主要做内容安全分析，尚未实现流量归因 → 选题建议的闭环
+- [ ] **Monitor 消费者**：`monitor_tasks.db` 中的任务无人消费，数据回收断裂
+- [ ] **社交互动引擎集成**：`social_interaction.py` 已实现但未集成进主循环（点赞/评论/互动趋势）
 - [ ] **策略优化师配图**：图片生成逻辑（Image Gen）尚未完整对接，目前仅有 Pillow 生成占位封面
-- [ ] **社交互动引擎**：`social_interaction.py` 已实现但未集成进主循环（点赞/评论/互动趋势）

@@ -18,10 +18,26 @@ from pathlib import Path
 
 from src.graph.state import AgentState
 from src.infra.model_adapter import ModelRouter
+from src.infra.image_gen import ImageGenerator, ImageGenerationError
 
 logger = logging.getLogger(__name__)
 
 ASSETS_DIR = Path("data/assets")
+CHECKPOINT_DIR = Path("data/checkpoints")
+
+
+def _save_research_checkpoint(account_id: str, research_results: list[dict]) -> None:
+    """Persist research_results to disk so they survive a creative-node crash."""
+    try:
+        date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        out_dir = CHECKPOINT_DIR / account_id / date_str
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / "research.json"
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(research_results, f, ensure_ascii=False, indent=2)
+        logger.info("[Node 3] Research checkpoint saved: %s", out_path)
+    except Exception as exc:
+        logger.warning("[Node 3] Failed to save research checkpoint: %s", exc)
 
 # ---------------------------------------------------------------------------
 # Copy generation prompt
@@ -101,6 +117,59 @@ def _parse_copy_response(text: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Strategist optimization prompt
+# ---------------------------------------------------------------------------
+
+STRATEGIST_PROMPT_TEMPLATE = """你是一位资深小红书运营策略师。请对以下初稿进行优化，并给出配图生成建议。
+
+## 账号人设
+{persona_name} — {persona_desc}
+目标受众: {audience}
+视觉风格: {visual_template}
+
+## 初稿内容
+标题: {draft_title}
+正文: {draft_content}
+标签: {draft_tags}
+
+## 优化要求
+1. **标题**：保留核心卖点，加强悬念感/信息差/情绪共鸣（15-20字，含emoji）
+2. **正文**：开头3行必须抓住读者，结构更清晰，结尾引导互动。字数300-800字
+3. **标签**：保留精准标签，替换低热度标签，总数5-7个
+4. **配图 Prompt**：用英文描述一张适合该帖子风格的配图（适合 DALL-E 3 / Midjourney）
+
+请以 JSON 格式输出：
+```json
+{{
+  "title": "优化后的标题",
+  "content": "优化后的正文",
+  "tags": ["标签1", "标签2"],
+  "image_gen_prompt": "A [style] image showing [subject], [mood], [composition], suitable for Chinese social media",
+  "optimization_notes": "简要说明主要改动点（1-2句）"
+}}
+```"""
+
+
+def _parse_strategist_response(text: str) -> dict:
+    """Extract JSON from the strategist LLM response."""
+    for fence in ("```json", "```"):
+        if fence in text:
+            start = text.index(fence) + len(fence)
+            end = text.find("```", start)
+            text = text[start:end].strip() if end != -1 else text[start:].strip()
+            break
+    else:
+        brace = text.find("{")
+        if brace != -1:
+            text = text[brace:]
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        logger.warning("[Node 3] Failed to parse strategist JSON.")
+        return {}
+
+
+# ---------------------------------------------------------------------------
 # Visual asset generation
 # ---------------------------------------------------------------------------
 
@@ -172,8 +241,14 @@ async def _generate_visual_assets(
     state: AgentState,
     title: str,
     research_results: list[dict],
+    image_gen_prompt: str | None = None,
 ) -> list[str]:
-    """Generate visual assets based on account type and visual style."""
+    """Generate visual assets based on account type and visual style.
+    
+    Supports:
+    - Knowledge cards (Pillow-based)
+    - AI-generated images (DALL-E 3 / Replicate Flux)
+    """
     persona = state["persona"]
     account_id = state["account_id"]
     visual_style = persona.get("visual_style", {})
@@ -183,15 +258,33 @@ async def _generate_visual_assets(
     analysis = research_results[0].get("analysis", {}) if research_results else {}
     key_facts = analysis.get("key_facts", [])
 
+    # 1. Knowledge card for education accounts
     if template == "knowledge_card" and key_facts:
         path = await _generate_knowledge_card(
             title, key_facts, account_id, visual_style
         )
         if path:
             assets.append(path)
-
-    # TODO: Add data_dashboard template for finance accounts (matplotlib K-line)
-    # TODO: Add warm_card template for lifestyle accounts (AI image gen)
+    
+    # 2. AI-generated image if prompt is available
+    if image_gen_prompt and template in ("ai_image", "warm_card", "lifestyle", ""):
+        try:
+            generator = ImageGenerator()
+            # Determine style based on platform (default to xiaohongshu)
+            platform = persona.get("platform", "xiaohongshu")
+            
+            path = await generator.generate(
+                prompt=image_gen_prompt,
+                style=platform,
+                account_id=account_id,
+            )
+            if path:
+                assets.append(path)
+                logger.info("[Node 3] AI image generated: %s", path)
+        except ImageGenerationError as e:
+            logger.warning("[Node 3] AI image generation failed: %s", e)
+        except Exception as e:
+            logger.warning("[Node 3] Unexpected error in image generation: %s", e)
 
     return assets
 
@@ -201,7 +294,11 @@ async def _generate_visual_assets(
 # ---------------------------------------------------------------------------
 
 async def creative_engine(state: AgentState) -> dict:
-    """Graph node: generate content drafts and visual assets."""
+    """Graph node: generate content drafts and visual assets.
+
+    Stage 1 (Copywriter): Generate raw copy from research.
+    Stage 2 (Strategist): Optimize copy + produce image_gen_prompt.
+    """
     persona = state["persona"]
     research_results = state["research_results"]
     task = state["task"]
@@ -209,8 +306,12 @@ async def creative_engine(state: AgentState) -> dict:
 
     logger.info("[Node 3] Creative generation for account: %s", account_id)
 
+    # 0. Persist research data — survives if LLM calls below crash
+    _save_research_checkpoint(account_id, research_results)
+
     # 1. Build copy generation prompt
     persona_cfg = persona.get("persona", {})
+    visual_style = persona.get("visual_style", {})
     research_summary, content_angles = _format_research_for_creative(research_results)
 
     prompt = COPY_PROMPT_TEMPLATE.format(
@@ -228,7 +329,7 @@ async def creative_engine(state: AgentState) -> dict:
 
     logger.info("[Node 3] Using copywriter=%s temp=%.2f", rc.model, rc.temperature)
 
-    # 2. Generate copy via LLM (Copywriter role)
+    # 2. Stage 1: Generate copy via Copywriter
     raw_response = await router.invoke(
         "copywriter", prompt,
         system_prompt=system_prompt,
@@ -240,12 +341,48 @@ async def creative_engine(state: AgentState) -> dict:
     draft_tags = copy.get("tags", [])
 
     logger.info(
-        "[Node 3] Copy generated — title='%s', content_len=%d, tags=%d",
+        "[Node 3] Copywriter done — title='%s', content_len=%d, tags=%d",
         draft_title[:30], len(draft_content), len(draft_tags),
     )
 
-    # 3. Generate visual assets
-    visual_assets = await _generate_visual_assets(state, draft_title, research_results)
+    # 3. Stage 2: Strategist — optimize content + generate image prompt
+    image_gen_prompt: str | None = None
+    try:
+        strategist_prompt = STRATEGIST_PROMPT_TEMPLATE.format(
+            persona_name=persona_cfg.get("name", "内容创作者"),
+            persona_desc=persona_cfg.get("description", ""),
+            audience=persona_cfg.get("audience", "通用读者"),
+            visual_template=visual_style.get("template", "通用"),
+            draft_title=draft_title,
+            draft_content=draft_content[:800],
+            draft_tags=", ".join(draft_tags),
+        )
+        rc_s = router.route("strategist")
+        logger.info("[Node 3] Strategist optimizing — model=%s", rc_s.model)
+
+        raw_optimized = await router.invoke("strategist", strategist_prompt)
+        optimized = _parse_strategist_response(raw_optimized)
+
+        if optimized.get("title"):
+            draft_title = optimized["title"]
+        if optimized.get("content"):
+            draft_content = optimized["content"]
+        if optimized.get("tags"):
+            draft_tags = optimized["tags"]
+        image_gen_prompt = optimized.get("image_gen_prompt") or None
+
+        logger.info(
+            "[Node 3] Strategist done — image_prompt=%s, notes=%s",
+            bool(image_gen_prompt),
+            optimized.get("optimization_notes", "")[:60],
+        )
+    except Exception as e:
+        logger.warning("[Node 3] Strategist step failed, using copywriter draft: %s", e)
+
+    # 4. Generate visual assets (knowledge card + AI images)
+    visual_assets = await _generate_visual_assets(
+        state, draft_title, research_results, image_gen_prompt
+    )
 
     logger.info("[Node 3] Visual assets generated: %d files", len(visual_assets))
 
@@ -254,4 +391,5 @@ async def creative_engine(state: AgentState) -> dict:
         "draft_content": draft_content,
         "draft_tags": draft_tags,
         "visual_assets": visual_assets,
+        "image_gen_prompt": image_gen_prompt,
     }

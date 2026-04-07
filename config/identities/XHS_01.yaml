@@ -51,6 +51,8 @@ schedule:
     - 19:00-21:00
   max_daily_posts: 2
   review_mode: review
+  auto_post: true      # 是否参与每日自动发文
+  auto_engage: true    # 是否参与自动社交互动（点赞/评论引流）
 sensitive_words_extra:
   - 包过
   - 保分
