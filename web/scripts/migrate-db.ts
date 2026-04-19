@@ -20,6 +20,7 @@ function migrate() {
   const requiredColumns = [
     { name: "research_data", type: "TEXT" },
     { name: "image_gen_prompt", type: "TEXT" },
+    { name: "generated_images", type: "TEXT" },
   ];
   
   let migrated = false;

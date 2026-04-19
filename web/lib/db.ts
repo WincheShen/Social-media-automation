@@ -27,6 +27,7 @@ function getDb(): Database.Database {
       research_data TEXT,
       safety_issues TEXT,
       image_gen_prompt TEXT,
+      generated_images TEXT,
       post_url TEXT,
       error TEXT
     )
@@ -49,6 +50,7 @@ function rowToTask(row: Record<string, unknown>): Task {
     research_data: row.research_data ? JSON.parse(row.research_data as string) : undefined,
     safety_issues: row.safety_issues ? JSON.parse(row.safety_issues as string) : undefined,
     image_gen_prompt: (row.image_gen_prompt as string) || undefined,
+    generated_images: row.generated_images ? JSON.parse(row.generated_images as string) : undefined,
     post_url: (row.post_url as string) || undefined,
     error: (row.error as string) || undefined,
   };
@@ -102,7 +104,7 @@ export function updateTask(id: string, fields: Partial<Task>): Task | null {
   for (const [key, value] of Object.entries(fields)) {
     if (key === "id" || key === "created_at") continue;
     const dbValue =
-      key === "draft_tags" || key === "safety_issues" || key === "research_data"
+      key === "draft_tags" || key === "safety_issues" || key === "research_data" || key === "generated_images"
         ? JSON.stringify(value)
         : value;
     updates.push(`${key} = ?`);

@@ -1,20 +1,22 @@
 """Image Generation Module — Generate images for social media posts.
 
 Supports multiple backends:
-- OpenAI DALL-E 3 (high quality, paid)
+- OpenAI GPT Image 1 / DALL-E 3 (high quality, paid)
+- Google Imagen 3 via Gemini API
 - Replicate Flux (good quality, cheaper)
 - Local placeholder (for testing)
 
 Usage:
     from src.infra.image_gen import ImageGenerator
     
-    gen = ImageGenerator()
+    gen = ImageGenerator(model="gpt-image-1")
     path = await gen.generate(prompt, style="xiaohongshu")
 """
 
 from __future__ import annotations
 
 import asyncio
+import base64
 import hashlib
 import logging
 import os
@@ -28,6 +30,14 @@ import httpx
 logger = logging.getLogger(__name__)
 
 IMAGES_DIR = Path("data/images")
+
+# Model → backend mapping
+_MODEL_BACKEND_MAP: dict[str, str] = {
+    "gpt-image-1": "openai",
+    "dall-e-3": "openai",
+    "flux-schnell": "replicate",
+    "gemini-imagen-3": "google",
+}
 
 # Style suffixes to enhance prompts for different platforms
 STYLE_SUFFIXES = {
@@ -62,16 +72,22 @@ class ImageGenerationError(Exception):
 class ImageGenerator:
     """Unified interface for image generation backends."""
     
-    def __init__(self, backend: str | None = None):
+    def __init__(self, model: str | None = None, backend: str | None = None):
         """Initialize the image generator.
         
         Args:
-            backend: Force a specific backend. If None, auto-detect based on env vars.
-                     Options: "openai", "replicate", "placeholder"
+            model: Specific model ID (e.g. "gpt-image-1", "dall-e-3", "gemini-imagen-3").
+                   Determines the backend automatically.
+            backend: Force a specific backend. Overridden by model if provided.
+                     Options: "openai", "replicate", "google", "placeholder"
         """
-        self.backend = backend or self._detect_backend()
+        self.model = model
+        if model and model in _MODEL_BACKEND_MAP:
+            self.backend = _MODEL_BACKEND_MAP[model]
+        else:
+            self.backend = backend or self._detect_backend()
         IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-        logger.info("ImageGenerator initialized with backend: %s", self.backend)
+        logger.info("ImageGenerator initialized: model=%s, backend=%s", self.model, self.backend)
     
     def _detect_backend(self) -> str:
         """Auto-detect available backend based on environment variables."""
@@ -108,19 +124,24 @@ class ImageGenerator:
         
         if self.backend == "openai":
             image_url = await self._generate_openai(enhanced_prompt, size)
+        elif self.backend == "google":
+            return await self._generate_google(enhanced_prompt, account_id)
         elif self.backend == "replicate":
             image_url = await self._generate_replicate(enhanced_prompt, size)
         else:
             return await self._generate_placeholder(prompt, account_id)
         
-        # Download and save the image
-        local_path = await self._download_image(image_url, account_id)
+        # Download and save the image (or use local path if already saved)
+        if isinstance(image_url, str) and image_url.startswith("__LOCAL__"):
+            local_path = Path(image_url.removeprefix("__LOCAL__"))
+        else:
+            local_path = await self._download_image(image_url, account_id)
         logger.info("[ImageGen] Image saved to: %s", local_path)
         
         return str(local_path)
     
     async def _generate_openai(self, prompt: str, size: str) -> str:
-        """Generate image using OpenAI DALL-E 3."""
+        """Generate image using OpenAI (gpt-image-1 or dall-e-3)."""
         import openai
         
         api_key = os.getenv("OPENAI_API_KEY")
@@ -131,18 +152,46 @@ class ImageGenerator:
         else:
             client = openai.AsyncOpenAI(api_key=api_key)
         
+        model_name = self.model or "dall-e-3"
+        
         try:
-            response = await client.images.generate(
-                model="dall-e-3",
-                prompt=prompt,
-                size=size,
-                quality="standard",
-                n=1,
-            )
-            return response.data[0].url
+            if model_name == "gpt-image-1":
+                result = await client.images.generate(
+                    model="gpt-image-1",
+                    prompt=prompt,
+                    size=size,
+                    n=1,
+                )
+                # gpt-image-1 returns b64_json by default
+                img_data = result.data[0]
+                if img_data.b64_json:
+                    return await self._save_b64_image(img_data.b64_json, None)
+                return img_data.url
+            else:
+                response = await client.images.generate(
+                    model=model_name,
+                    prompt=prompt,
+                    size=size,
+                    quality="standard",
+                    n=1,
+                )
+                return response.data[0].url
         except openai.OpenAIError as e:
             logger.error("[ImageGen] OpenAI error: %s", e)
             raise ImageGenerationError(f"OpenAI image generation failed: {e}") from e
+    
+    async def _save_b64_image(self, b64_data: str, account_id: str | None) -> str:
+        """Save a base64-encoded image to disk and return the path (as a file:// URI for internal use)."""
+        if account_id:
+            subdir = IMAGES_DIR / account_id / datetime.now().strftime("%Y-%m-%d")
+        else:
+            subdir = IMAGES_DIR / "generated"
+        subdir.mkdir(parents=True, exist_ok=True)
+        filename = f"img_{datetime.now().strftime('%H%M%S')}_{uuid.uuid4().hex[:6]}.png"
+        filepath = subdir / filename
+        filepath.write_bytes(base64.b64decode(b64_data))
+        logger.info("[ImageGen] Saved b64 image to: %s", filepath)
+        return f"__LOCAL__{filepath.absolute()}"
     
     async def _generate_replicate(self, prompt: str, size: str) -> str:
         """Generate image using Replicate Flux model."""
@@ -203,6 +252,48 @@ class ImageGenerator:
                     raise ImageGenerationError(f"Replicate generation failed: {error}")
             
             raise ImageGenerationError("Replicate generation timed out")
+    
+    async def _generate_google(self, prompt: str, account_id: str | None) -> str:
+        """Generate image using Google Imagen 3 via Gemini API."""
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ImageGenerationError("GOOGLE_API_KEY not set")
+
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={api_key}",
+                json={
+                    "instances": [{"prompt": prompt}],
+                    "parameters": {
+                        "sampleCount": 1,
+                        "aspectRatio": "1:1",
+                    },
+                },
+            )
+
+            if response.status_code != 200:
+                raise ImageGenerationError(f"Google Imagen API error ({response.status_code}): {response.text[:300]}")
+
+            data = response.json()
+            predictions = data.get("predictions", [])
+            if not predictions:
+                raise ImageGenerationError("No predictions from Google Imagen")
+
+            b64_image = predictions[0].get("bytesBase64Encoded")
+            if not b64_image:
+                raise ImageGenerationError("No image data in Google Imagen response")
+
+            # Save to disk
+            if account_id:
+                subdir = IMAGES_DIR / account_id / datetime.now().strftime("%Y-%m-%d")
+            else:
+                subdir = IMAGES_DIR / "generated"
+            subdir.mkdir(parents=True, exist_ok=True)
+            filename = f"img_{datetime.now().strftime('%H%M%S')}_{uuid.uuid4().hex[:6]}.png"
+            filepath = subdir / filename
+            filepath.write_bytes(base64.b64decode(b64_image))
+            logger.info("[ImageGen] Google Imagen image saved to: %s", filepath)
+            return str(filepath.absolute())
     
     async def _generate_placeholder(self, prompt: str, account_id: str | None) -> str:
         """Generate a placeholder image for testing."""
@@ -312,7 +403,8 @@ async def generate_image(
     prompt: str,
     style: str = "xiaohongshu",
     account_id: str | None = None,
+    model: str | None = None,
 ) -> str:
     """Generate an image and return the local file path."""
-    gen = ImageGenerator()
+    gen = ImageGenerator(model=model)
     return await gen.generate(prompt, style=style, account_id=account_id)

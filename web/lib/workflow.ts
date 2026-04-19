@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import path from "path";
-import { updateTask } from "./db";
+import { getTask, updateTask } from "./db";
 
 const PROJECT_ROOT = path.resolve(process.cwd(), "..");
 const PYTHON = path.join(PROJECT_ROOT, ".venv", "bin", "python3");
@@ -114,6 +114,8 @@ async def main():
         "safety_passed": result.get("safety_passed", False),
         "safety_issues": result.get("safety_issues", []),
         "image_gen_prompt": result.get("image_gen_prompt") or "",
+        "review_mode": result.get("review_mode", "review"),
+        "image_gen_model": result.get("persona", {}).get("models", {}).get("image_gen") or "",
     }
     # Encode as base64 to avoid JSON escaping issues in stdout
     output_json = json.dumps(output, ensure_ascii=False)
@@ -157,6 +159,14 @@ asyncio.run(main())
           safety_issues: result.safety_issues || [],
           image_gen_prompt: result.image_gen_prompt || undefined,
         });
+
+        // Auto-generate image when review_mode is "auto" and we have a prompt
+        const reviewMode = result.review_mode || "review";
+        const imagePrompt = result.image_gen_prompt || "";
+        if (reviewMode === "auto" && imagePrompt) {
+          const imageModel = result.image_gen_model || null;
+          runImageGeneration(taskId, accountId, imagePrompt, imageModel);
+        }
       } catch (e) {
         updateTask(taskId, {
           status: "failed",
@@ -479,6 +489,77 @@ asyncio.run(main())
       updateTask(taskId, {
         status: "failed",
         error: `Publish failed (exit ${code}): ${stderr.slice(-500)}`,
+      });
+    }
+  });
+}
+
+/**
+ * Run image generation for a task. Uses the Python ImageGenerator backend.
+ * Returns generated image paths via callback. Updates task.generated_images.
+ */
+export function runImageGeneration(
+  taskId: string,
+  accountId: string,
+  prompt: string,
+  model: string | null,
+): void {
+  const scriptContent = `
+import asyncio, json, sys
+sys.path.insert(0, "${PROJECT_ROOT}")
+from dotenv import load_dotenv
+load_dotenv("${PROJECT_ROOT}/.env")
+from src.infra.image_gen import ImageGenerator
+
+async def main():
+    model = ${model ? JSON.stringify(model) : "None"}
+    gen = ImageGenerator(model=model)
+    path = await gen.generate(
+        prompt=${JSON.stringify(prompt)},
+        style="xiaohongshu",
+        account_id=${JSON.stringify(accountId)},
+    )
+    output = {"images": [path], "error": ""}
+    print("__JSON_START__")
+    print(json.dumps(output, ensure_ascii=False))
+    print("__JSON_END__")
+
+asyncio.run(main())
+`;
+
+  const proc = spawn(PYTHON, ["-c", scriptContent], {
+    cwd: PROJECT_ROOT,
+    env: { ...process.env, PYTHONPATH: PROJECT_ROOT },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  let stdout = "";
+  let stderr = "";
+
+  proc.stdout.on("data", (data: Buffer) => {
+    stdout += data.toString();
+  });
+  proc.stderr.on("data", (data: Buffer) => {
+    stderr += data.toString();
+  });
+
+  proc.on("close", (code: number | null) => {
+    if (code === 0 && stdout.includes("__JSON_START__")) {
+      try {
+        const jsonStr = stdout.split("__JSON_START__")[1].split("__JSON_END__")[0].trim();
+        const result = JSON.parse(jsonStr);
+        const images: string[] = result.images || [];
+        // Store as relative paths from project root
+        const relImages = images.map((p: string) => path.relative(PROJECT_ROOT, p));
+        updateTask(taskId, { generated_images: relImages });
+      } catch {
+        updateTask(taskId, {
+          error: `Image generation parse error: ${stdout.slice(-300)}`,
+        });
+      }
+    } else {
+      updateTask(taskId, {
+        error: `Image generation failed (exit ${code}): ${stderr.slice(-500)}`,
       });
     }
   });

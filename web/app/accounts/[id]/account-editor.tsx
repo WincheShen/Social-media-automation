@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AccountConfig } from "@/lib/types";
-import { AVAILABLE_MODELS, MODEL_ROLES } from "@/lib/types";
+import { AVAILABLE_MODELS, MODEL_ROLES, IMAGE_GEN_MODELS } from "@/lib/types";
 import { Save, RotateCcw, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -23,6 +23,9 @@ export function AccountEditor({ account }: { account: AccountConfig }) {
   });
   const [fallbackModel, setFallbackModel] = useState(
     account.models?.fallback || "gemini-2.5-flash"
+  );
+  const [imageGenModel, setImageGenModel] = useState(
+    account.models?.image_gen || ""
   );
   const [keywords, setKeywords] = useState(
     (account.keywords || []).join(", ")
@@ -61,6 +64,7 @@ export function AccountEditor({ account }: { account: AccountConfig }) {
           copywriter: roleModels.copywriter,
           strategist: roleModels.strategist,
           fallback: fallbackModel,
+          image_gen: imageGenModel || null,
         },
         keywords: keywords
           .split(",")
@@ -215,6 +219,24 @@ export function AccountEditor({ account }: { account: AccountConfig }) {
             ))}
           </select>
           <p className="text-xs text-muted-foreground mt-1">任何节点失败时的备选模型</p>
+        </div>
+        <div className="pt-2 border-t border-border">
+          <label className="block text-sm font-medium mb-1.5">配图生成模型</label>
+          <select
+            value={imageGenModel}
+            onChange={(e) => setImageGenModel(e.target.value)}
+            className="w-64 px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">不自动生成</option>
+            {IMAGE_GEN_MODELS.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.display_name} ({m.provider})
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground mt-1">
+            auto 模式下自动生成配图；review 模式可在审核页手动选择
+          </p>
         </div>
       </section>
 

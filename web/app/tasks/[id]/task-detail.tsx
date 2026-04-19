@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Task } from "@/lib/types";
+import { IMAGE_GEN_MODELS } from "@/lib/types";
 import { StatusBadge } from "@/components/status-badge";
 import {
   ArrowLeft,
@@ -16,6 +17,7 @@ import {
   Sparkles,
   Copy,
   CheckCheck,
+  ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -28,6 +30,8 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
   const [deleting, setDeleting] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [promptCopied, setPromptCopied] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [imageModel, setImageModel] = useState(IMAGE_GEN_MODELS[0].id);
 
   // Editable fields
   const [title, setTitle] = useState(task.draft_title || "");
@@ -47,15 +51,19 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
         setContent(updated.draft_content || "");
         setTagsStr((updated.draft_tags || []).join(", "));
       }
+      // Stop image polling when images arrive
+      if (generatingImage && updated.generated_images && updated.generated_images.length > 0) {
+        setGeneratingImage(false);
+      }
     }
-  }, [task.id, editing]);
+  }, [task.id, editing, generatingImage]);
 
   useEffect(() => {
-    if (task.status === "running" || task.status === "publishing") {
+    if (task.status === "running" || task.status === "publishing" || generatingImage) {
       const interval = setInterval(refresh, 3000);
       return () => clearInterval(interval);
     }
-  }, [task.status, refresh]);
+  }, [task.status, generatingImage, refresh]);
 
   async function handleApprove() {
     setApproving(true);
@@ -137,6 +145,25 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
       }
     } finally {
       setRetrying(false);
+    }
+  }
+
+  async function handleGenerateImage() {
+    setGeneratingImage(true);
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/generate-image`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: task.image_gen_prompt,
+          model: imageModel,
+        }),
+      });
+      if (!res.ok) {
+        setGeneratingImage(false);
+      }
+    } catch {
+      setGeneratingImage(false);
     }
   }
 
@@ -385,13 +412,13 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
         </div>
       )}
 
-      {/* Image generation prompt */}
+      {/* Image generation prompt + generate button */}
       {task.image_gen_prompt && (
         <div className="bg-card rounded-xl border border-violet-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-violet-100 bg-violet-50 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-violet-600" />
-              <h2 className="font-semibold text-violet-900">策略优化师推荐配图 Prompt</h2>
+              <h2 className="font-semibold text-violet-900">配图生成</h2>
             </div>
             <button
               onClick={handleCopyPrompt}
@@ -404,11 +431,65 @@ export function TaskDetail({ task: initialTask }: { task: Task }) {
               )}
             </button>
           </div>
-          <div className="p-5">
-            <p className="text-xs text-violet-500 mb-2">可直接粘贴到 DALL-E 3 / Midjourney / 其他图片生成工具</p>
+          <div className="p-5 space-y-4">
             <div className="font-mono text-sm bg-violet-50 border border-violet-100 rounded-lg px-4 py-3 leading-relaxed text-violet-900 whitespace-pre-wrap">
               {task.image_gen_prompt}
             </div>
+
+            {/* Model selector + generate button */}
+            <div className="flex items-center gap-3">
+              <select
+                value={imageModel}
+                onChange={(e) => setImageModel(e.target.value)}
+                disabled={generatingImage}
+                className="px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {IMAGE_GEN_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.display_name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleGenerateImage}
+                disabled={generatingImage}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 transition-colors disabled:opacity-50"
+              >
+                {generatingImage ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" />生成中...</>
+                ) : (
+                  <><ImageIcon className="h-4 w-4" />生成配图</>
+                )}
+              </button>
+            </div>
+
+            {/* Generated images display */}
+            {task.generated_images && task.generated_images.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-xs text-violet-500 font-medium">已生成配图</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {task.generated_images.map((imgPath, i) => {
+                    const isImage = /\.(png|jpe?g|webp|gif)$/i.test(imgPath);
+                    if (!isImage) return null;
+                    return (
+                      <a
+                        key={i}
+                        href={`/api/images/${imgPath}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block rounded-lg border border-violet-200 overflow-hidden hover:shadow-lg transition-shadow"
+                      >
+                        <img
+                          src={`/api/images/${imgPath}`}
+                          alt={`Generated image ${i + 1}`}
+                          className="w-full h-auto"
+                        />
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

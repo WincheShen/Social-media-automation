@@ -66,6 +66,7 @@ export interface Task {
   research_data?: any;  // Full research results for retry (research_results, data_sources, etc.)
   safety_issues?: string[];
   image_gen_prompt?: string;  // Strategist's recommended image generation prompt
+  generated_images?: string[];  // Paths to generated images (relative to data/images/)
   // Publish result (populated after nodes 6-8)
   post_url?: string;
   error?: string;
@@ -78,6 +79,8 @@ export interface ModelInfo {
 }
 
 export const AVAILABLE_MODELS: ModelInfo[] = [
+  { id: "gemini-3.1-pro", display_name: "Gemini 3.1 Pro", provider: "google" },
+  { id: "gemini-3.1-flash", display_name: "Gemini 3.1 Flash", provider: "google" },
   { id: "gemini-2.5-pro", display_name: "Gemini 2.5 Pro", provider: "google" },
   { id: "gemini-2.5-flash", display_name: "Gemini 2.5 Flash", provider: "google" },
   { id: "gemini-2.0-flash", display_name: "Gemini 2.0 Flash", provider: "google" },
@@ -94,3 +97,16 @@ export const MODEL_ROLES = [
   { key: "copywriter", label: "Copywriter", desc: "拟人创作", hint: "拒绝AI腔、文笔细腻" },
   { key: "strategist", label: "Strategist", desc: "策略优化", hint: "数据处理强、工具稳定" },
 ] as const;
+
+export interface ImageGenModelInfo {
+  id: string;
+  display_name: string;
+  provider: "openai" | "replicate" | "google";
+}
+
+export const IMAGE_GEN_MODELS: ImageGenModelInfo[] = [
+  { id: "gpt-image-1", display_name: "GPT Image 1 (OpenAI)", provider: "openai" },
+  { id: "dall-e-3", display_name: "DALL-E 3", provider: "openai" },
+  { id: "flux-schnell", display_name: "Flux Schnell (Replicate)", provider: "replicate" },
+  { id: "gemini-imagen-3", display_name: "Imagen 3 (Google)", provider: "google" },
+];
