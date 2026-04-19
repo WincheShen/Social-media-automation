@@ -36,7 +36,9 @@ _MODEL_BACKEND_MAP: dict[str, str] = {
     "gpt-image-1": "openai",
     "dall-e-3": "openai",
     "flux-schnell": "replicate",
-    "gemini-imagen-3": "google",
+    "imagen-4.0-fast": "google_imagen",
+    "imagen-4.0-ultra": "google_imagen",
+    "gemini-2.5-flash-image": "google_gemini",
 }
 
 # Style suffixes to enhance prompts for different platforms
@@ -124,16 +126,18 @@ class ImageGenerator:
         
         if self.backend == "openai":
             image_url = await self._generate_openai(enhanced_prompt, size)
-        elif self.backend == "google":
-            return await self._generate_google(enhanced_prompt, account_id)
+        elif self.backend == "google_imagen":
+            return await self._generate_google_imagen(enhanced_prompt, account_id)
+        elif self.backend == "google_gemini":
+            return await self._generate_google_gemini(enhanced_prompt, account_id)
         elif self.backend == "replicate":
             image_url = await self._generate_replicate(enhanced_prompt, size)
         else:
             return await self._generate_placeholder(prompt, account_id)
         
         # Download and save the image (or use local path if already saved)
-        if isinstance(image_url, str) and image_url.startswith("__LOCAL__"):
-            local_path = Path(image_url.removeprefix("__LOCAL__"))
+        if isinstance(image_url, str) and image_url.startswith("/"):
+            local_path = Path(image_url)
         else:
             local_path = await self._download_image(image_url, account_id)
         logger.info("[ImageGen] Image saved to: %s", local_path)
@@ -165,7 +169,7 @@ class ImageGenerator:
                 # gpt-image-1 returns b64_json by default
                 img_data = result.data[0]
                 if img_data.b64_json:
-                    return await self._save_b64_image(img_data.b64_json, None)
+                    return await self._save_b64_to_disk(img_data.b64_json, None)
                 return img_data.url
             else:
                 response = await client.images.generate(
@@ -179,19 +183,6 @@ class ImageGenerator:
         except openai.OpenAIError as e:
             logger.error("[ImageGen] OpenAI error: %s", e)
             raise ImageGenerationError(f"OpenAI image generation failed: {e}") from e
-    
-    async def _save_b64_image(self, b64_data: str, account_id: str | None) -> str:
-        """Save a base64-encoded image to disk and return the path (as a file:// URI for internal use)."""
-        if account_id:
-            subdir = IMAGES_DIR / account_id / datetime.now().strftime("%Y-%m-%d")
-        else:
-            subdir = IMAGES_DIR / "generated"
-        subdir.mkdir(parents=True, exist_ok=True)
-        filename = f"img_{datetime.now().strftime('%H%M%S')}_{uuid.uuid4().hex[:6]}.png"
-        filepath = subdir / filename
-        filepath.write_bytes(base64.b64decode(b64_data))
-        logger.info("[ImageGen] Saved b64 image to: %s", filepath)
-        return f"__LOCAL__{filepath.absolute()}"
     
     async def _generate_replicate(self, prompt: str, size: str) -> str:
         """Generate image using Replicate Flux model."""
@@ -253,15 +244,22 @@ class ImageGenerator:
             
             raise ImageGenerationError("Replicate generation timed out")
     
-    async def _generate_google(self, prompt: str, account_id: str | None) -> str:
-        """Generate image using Google Imagen 3 via Gemini API."""
+    async def _generate_google_imagen(self, prompt: str, account_id: str | None) -> str:
+        """Generate image using Google Imagen 4.0 via predict API."""
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ImageGenerationError("GOOGLE_API_KEY not set")
 
+        # Map short names to full model IDs
+        model_map = {
+            "imagen-4.0-fast": "imagen-4.0-fast-generate-001",
+            "imagen-4.0-ultra": "imagen-4.0-ultra-generate-001",
+        }
+        model_id = model_map.get(self.model or "", "imagen-4.0-fast-generate-001")
+
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={api_key}",
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:predict?key={api_key}",
                 json={
                     "instances": [{"prompt": prompt}],
                     "parameters": {
@@ -283,17 +281,53 @@ class ImageGenerator:
             if not b64_image:
                 raise ImageGenerationError("No image data in Google Imagen response")
 
-            # Save to disk
-            if account_id:
-                subdir = IMAGES_DIR / account_id / datetime.now().strftime("%Y-%m-%d")
-            else:
-                subdir = IMAGES_DIR / "generated"
-            subdir.mkdir(parents=True, exist_ok=True)
-            filename = f"img_{datetime.now().strftime('%H%M%S')}_{uuid.uuid4().hex[:6]}.png"
-            filepath = subdir / filename
-            filepath.write_bytes(base64.b64decode(b64_image))
-            logger.info("[ImageGen] Google Imagen image saved to: %s", filepath)
-            return str(filepath.absolute())
+            return await self._save_b64_to_disk(b64_image, account_id)
+
+    async def _generate_google_gemini(self, prompt: str, account_id: str | None) -> str:
+        """Generate image using Gemini native image generation (generateContent)."""
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ImageGenerationError("GOOGLE_API_KEY not set")
+
+        model_id = self.model or "gemini-2.5-flash-image"
+
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={api_key}",
+                json={
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"responseModalities": ["image", "text"]},
+                },
+            )
+
+            if response.status_code != 200:
+                raise ImageGenerationError(f"Gemini image API error ({response.status_code}): {response.text[:300]}")
+
+            data = response.json()
+            candidates = data.get("candidates", [])
+            if not candidates:
+                raise ImageGenerationError("No candidates from Gemini image generation")
+
+            # Find the image part in the response
+            for part in candidates[0].get("content", {}).get("parts", []):
+                inline = part.get("inlineData", {})
+                if inline.get("mimeType", "").startswith("image/"):
+                    return await self._save_b64_to_disk(inline["data"], account_id)
+
+            raise ImageGenerationError("No image data in Gemini response")
+
+    async def _save_b64_to_disk(self, b64_data: str, account_id: str | None) -> str:
+        """Save base64 image data to disk, return absolute path."""
+        if account_id:
+            subdir = IMAGES_DIR / account_id / datetime.now().strftime("%Y-%m-%d")
+        else:
+            subdir = IMAGES_DIR / "generated"
+        subdir.mkdir(parents=True, exist_ok=True)
+        filename = f"img_{datetime.now().strftime('%H%M%S')}_{uuid.uuid4().hex[:6]}.png"
+        filepath = subdir / filename
+        filepath.write_bytes(base64.b64decode(b64_data))
+        logger.info("[ImageGen] Saved image to: %s", filepath)
+        return str(filepath.absolute())
     
     async def _generate_placeholder(self, prompt: str, account_id: str | None) -> str:
         """Generate a placeholder image for testing."""

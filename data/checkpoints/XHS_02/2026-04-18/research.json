@@ -1,0 +1,190 @@
+[
+  {
+    "type": "web_search_analysis",
+    "task_type": "market_analysis",
+    "models_used": {
+      "data_collector": "gpt-5.3-chat",
+      "logic_analyst": "gpt-5.3-chat"
+    },
+    "raw_search_count": 9,
+    "extraction": {
+      "extracted_facts": [
+        {
+          "fact": "伊朗宣布对霍尔木兹海峡船舶通行实施新规，并强调“有条件暂时开放”该海峡。",
+          "source_url": "https://stock.eastmoney.com/a/cbkjj.html",
+          "importance": "high"
+        },
+        {
+          "fact": "受中东局势影响，贵金属价格上涨，现货白银上涨3.27%，COMEX白银期货上涨3.09%。",
+          "source_url": "https://www.163.com/dy/article/KQPNIQCB05561UAV.html",
+          "importance": "high"
+        },
+        {
+          "fact": "国际油价波动明显，WTI原油期货一度跌幅扩大至14%，报81.387美元/桶。",
+          "source_url": "https://www.163.com/dy/article/KQPNIQCB05561UAV.html",
+          "importance": "high"
+        },
+        {
+          "fact": "中东地缘政治事件被认为是近期原油价格短期波动的主要驱动因素。",
+          "source_url": "https://stock.eastmoney.com/xuexiao/xx523.html",
+          "importance": "high"
+        },
+        {
+          "fact": "受伊朗相关地缘因素扰动，甲醇、LPG等能化品种价格出现波动或上涨。",
+          "source_url": "https://stock.eastmoney.com/xuexiao/xx523.html",
+          "importance": "high"
+        },
+        {
+          "fact": "能化品种（如合成橡胶、PX、PTA等）在商品市场中出现走强，部分品种由基本面支撑或超跌反弹驱动。",
+          "source_url": "https://stock.eastmoney.com/xuexiao/xx523.html",
+          "importance": "medium"
+        },
+        {
+          "fact": "机构观点认为，在商品板块轮动中，能化和农产品可能持续成为市场热点板块。",
+          "source_url": "https://stock.eastmoney.com/xuexiao/xx523.html",
+          "importance": "medium"
+        },
+        {
+          "fact": "近期A股市场板块轮动中，半导体、电力设备、电子板块表现较为活跃。",
+          "source_url": "https://k.sina.com.cn/article_7879996580_1d5af34a402001qjq0.html",
+          "importance": "medium"
+        },
+        {
+          "fact": "光通信、CPO概念在A股市场中反复活跃，被视为科技板块的重要活跃方向。",
+          "source_url": "https://k.sina.com.cn/article_7879996580_1d5af34a402001qjq0.html",
+          "importance": "medium"
+        },
+        {
+          "fact": "券商板块若再次发力，被认为可能推动A股新一轮反弹行情。",
+          "source_url": "https://k.sina.com.cn/article_7879996580_1d5af34a402001qjq0.html",
+          "importance": "medium"
+        },
+        {
+          "fact": "全球股市方面，美股三大指数上涨均超过1%，纳指实现13连涨并创出新高。",
+          "source_url": "https://stock.eastmoney.com/a/cbkjj.html",
+          "importance": "medium"
+        },
+        {
+          "fact": "分析认为随着A股对中东局势逐渐“脱敏”，市场可能走出相对独立行情。",
+          "source_url": "https://k.sina.com.cn/article_7879996580_1d5af34a402001qjq0.html",
+          "importance": "low"
+        }
+      ],
+      "raw_data_points": [
+        "现货白银涨3.27%",
+        "COMEX白银期货涨3.09%",
+        "WTI原油期货跌幅扩大至14%",
+        "WTI原油价格81.387美元/桶",
+        "美股三大指数涨幅均超过1%",
+        "纳斯达克指数13连涨",
+        "A股市场2396家上涨，2986家下跌",
+        "沪指短期支撑约4028点",
+        "沪指短期压力约4112点"
+      ],
+      "source_count": 4
+    },
+    "analysis": {
+      "key_facts": [
+        "伊朗宣布对霍尔木兹海峡船舶通行实施新规，并强调“有条件暂时开放”该海峡，该区域是全球重要石油运输通道。",
+        "受中东局势影响，贵金属价格明显走强，现货白银上涨3.27%，COMEX白银期货上涨3.09%。",
+        "国际油价出现剧烈波动，WTI原油期货一度下跌至81.387美元/桶，盘中跌幅扩大至14%。",
+        "地缘政治冲突被认为是近期原油价格短期波动的重要驱动因素之一。",
+        "受伊朗相关因素扰动，甲醇、LPG等能化品种出现波动或上涨。",
+        "商品市场中PX、PTA、合成橡胶等能化品种出现走强，部分由基本面或超跌反弹驱动。",
+        "机构观点认为商品市场轮动中，能化和农产品板块可能成为阶段热点。",
+        "A股近期活跃板块包括半导体、电力设备、电子以及光通信、CPO等科技方向。",
+        "全球市场方面，美股三大指数上涨超过1%，纳指实现13连涨并创历史新高。"
+      ],
+      "pain_points": [
+        "周末突发地缘政治事件后，投资者最关心周一A股是否会出现情绪驱动的板块异动。",
+        "普通投资者难以判断油价、贵金属和A股行业板块之间的传导关系。",
+        "市场板块轮动较快，投资者希望通过历史K线规律找到最可能率先反应的板块。",
+        "在科技股和周期股之间如何判断短期资金优先流向。"
+      ],
+      "content_angles": [
+        {
+          "angle": "油价波动通常首先映射到A股能源链条：石油开采、油服及化工品板块可能出现情绪驱动的短线波动",
+          "supporting_data": "霍尔木兹海峡是全球重要石油运输通道，伊朗宣布实施新规后原油市场剧烈波动，WTI原油期货盘中波动明显；同时甲醇、LPG等能化品种价格出现上涨或波动，说明地缘风险首先通过能源商品传导。",
+          "source_url": "https://stock.eastmoney.com/xuexiao/xx523.html"
+        },
+        {
+          "angle": "避险情绪上升时，贵金属价格往往率先反应，对A股贵金属与黄金概念板块形成情绪映射",
+          "supporting_data": "受中东局势影响，现货白银上涨3.27%，COMEX白银期货上涨3.09%，贵金属作为传统避险资产出现明显资金流入。",
+          "source_url": "https://www.163.com/dy/article/KQPNIQCB05561UAV.html"
+        },
+        {
+          "angle": "商品市场联动效应可能带动能化产业链，如PX、PTA、合成橡胶等化工细分板块阶段性活跃",
+          "supporting_data": "商品市场中PX、PTA、合成橡胶等能化品种出现走强，同时机构观点认为能化和农产品在商品板块轮动中可能持续成为热点。",
+          "source_url": "https://stock.eastmoney.com/xuexiao/xx523.html"
+        },
+        {
+          "angle": "若外部事件未持续升级，A股主线仍可能回归科技成长方向，如半导体、电力设备、CPO等",
+          "supporting_data": "近期A股市场中半导体、电力设备、电子以及光通信、CPO概念反复活跃，显示资金仍在科技主线中轮动。",
+          "source_url": "https://k.sina.com.cn/article_7879996580_1d5af34a402001qjq0.html"
+        },
+        {
+          "angle": "海外市场风险偏好仍较强，美股持续上涨可能对A股情绪形成一定缓冲",
+          "supporting_data": "美股三大指数上涨超过1%，纳斯达克实现13连涨并创出新高，显示全球风险资产情绪仍偏积极。",
+          "source_url": "https://stock.eastmoney.com/a/cbkjj.html"
+        }
+      ],
+      "summary": "从历史经验和当前商品市场表现看，中东地缘事件通常首先通过能源与避险资产传导，因此短期需要重点观察A股石油、油服、化工以及贵金属等方向的情绪反应。但如果事件未持续升级，市场资金仍可能回到近期活跃的科技主线（如半导体、CPO等）。同时，美股强势表现也可能对A股风险偏好形成一定支撑。"
+    },
+    "raw_sources": [
+      {
+        "title": "A股:股民坐稳扶好了，下周一，4月20日，很可能将迎来更大的转变|大盘|沪指|a股|周k线_网易订阅",
+        "url": "https://www.163.com/dy/article/KQPNIQCB05561UAV.html",
+        "content": "南方都市报 2026-04-17 12:56:56\n\n### 太子奶创始人再创业陷困局：数月未发货，消费者求退款\n\n界面新闻 2026-04-17 17:37:11\n\n### 被噪音逼到失眠崩溃，男子在自制隔音舱里一住就是5年，2020年，他凭借建筑专业知识自制了第一个隔音舱，目前已接到100多个订单\n\n观威海 2026-04-17 18:12:06\n\n### 背背佳要赴港IPO了，翻红成为直播间爆款\n\n每日经济新闻 2026-04-16 19:34:17\n\n### 文章新开面馆口味评分3.6分，网友：30多元一碗面有点贵\n\n红星新闻 2026-04-13 17:22:41\n\n### 大哥健身房里猛练2小时，结果刚出门腿一软，直接上演“平地摔”\n\n星视频 2026-04-17 18:41:46\n\n### 1块钱饺子皮做出新花样，还没出锅就口水直流了，一大盘不够吃\n\n张三姐美食 2026-04-18 09:39:25\n\n### 菲达环保四名高层被出具警示函 公司开展期货与衍生品类交易却未建立相关制度\n\n每日经济新闻 2026-04-18 11:14:08\n\n### 时隔10年再现“增收不增利”！北方华创2025年净利润下滑1.77%，研发费用增长近50%\n\n每日经济新闻 2026-04-18 11:14:08\n\n暴涨！暴涨！霍尔木兹，又有变数！\n\n### 暴涨！暴涨！霍尔木兹，又有变数！\n\n雷军直播“续航神话”，我楼下送水大叔都比你懂\n\n### 雷军直播“续航神话”，我楼下送水大叔都比你懂\n\n为什么15艘美国军舰一堵门，伊朗的“强硬人设”立马就崩了？\n\n### 为什么15艘美国军舰一堵门，伊朗的“强硬人设”立马就崩了？\n\n11年前优衣库男女主现状曝光，他们还在一起生了两个孩子\n\n### 11年前优衣库男女主现状曝光，他们还在一起生了两个孩子 [...] 每日经济新闻 2026-04-17 22:42:38\n\n### 广东“莫氏鸡煲大公主”爆火前后反差大，晚上干到凌晨2点才收工，发文吐槽：这个鸡你们是非吃不可吗\n\n大象新闻 2026-04-15 12:57:04\n\n### 雷军宣布明早6点半直播：开新SU7进行长途续航测试\n\n快科技 2026-04-17 02:41:13\n\n### 早读｜特朗普“感谢”伊朗开放海峡，金银价格大涨\n\n上观新闻 2026-04-18 07:11:08\n\n### 东莞理工学院一学生因在学生社区送外卖被点名通报批评，校方回应\n\n齐鲁壹点 2026-04-17 22:11:29\n\n### 浙江街头已大量出现！不少人捂鼻吐槽：别靠近，太上头\n\n环球网资讯 2026-04-17 14:48:08\n\n### 广州越秀公园惊现“猫蛇大战”，目击者：双方僵持了差不多三分钟\n\n星视频 2026-04-17 14:41:00\n\n### 庆祝“战争结束”、市场提前开香槟？分析师警告：尾部风险仍然巨大\n\n华尔街见闻官方 2026-04-18 10:35:22\n\n### 我悟了，投资有风险入市需谨慎\n\n股涨日常 2026-04-16 09:25:49\n\n### 男子爬上泰山“五岳独尊”石刻拍照，景区：将核查其身份进行处理\n\n扬子晚报 2026-04-17 12:09:40\n\n### 格力怒斥海信，称其没资格用“真铜实料”四字进行宣传，海信高管回怼：又当又立\n\n大风新闻 2026-04-15 15:07:03\n\n### 无锡机器人交警上路执勤 当地交管：试点投入两台，身高1.75米，单次充满电可工作5小时\n\n红星新闻 2026-04-17 17:07:58\n\n### 深圳一小区地桩竟“长”出“金属倒刺”！居民吓坏，物业整改\n\n南方都市报 2026-04-17 12:56:56 [...] 极目新闻 2026-04-17 23:38:43\n\n### 广西三月三幼儿园美食共享，妈妈给儿子准备一大盘虾\n\nCQTV新视界 2026-04-17 11:57:36\n\n### 实地探访B太帮扶凉山女孩家：新房已建成，当事人避谈质疑\n\n上游新闻 2026-04-17 17:43:30\n\n### 全球股市都嘲笑特朗普！他还有什么阴招？\n\n睿知睿见 2026-04-18 07:45:18\n\n### 现货白银涨3.27%，COMEX白银期货涨3.09%\n\n每日经济新闻 2026-04-18 06:27:04\n\n### 纳指13连涨再创新高 三大指数均涨超1%\n\n每日经济新闻 2026-04-18 06:05:05\n\n### 离岸人民币（CNH）兑美元报6.8160元\n\n每日经济新闻 2026-04-18 06:27:04\n\n### 本田或将关停广州、武汉两座燃油车工厂\n\n中国能源网 2026-04-17 14:45:03\n\n### 17分钟讲清楚未来5年房价走势，听听这位大哥的精彩分析\n\n桔子唠生活 2026-04-18 01:42:09\n\n### 美元指数涨0.03%报98.23\n\n每日经济新闻 2026-04-18 07:09:36\n\n### 裁掉贝利？贝利爆发连续得分，杰曼先抑后扬，北京送给山东五连败\n\n小徐讲八卦 2026-04-18 05:44:19\n\n### 英国10年期国债收益率跌8.5个基点\n\n每日经济新闻 2026-04-18 06:59:04\n\n### A股再添千万年薪CFO！顺丰何捷、中微陈伟文薪资破千万元，全年收入均涨超百万元\n\n每日经济新闻 2026-04-15 15:54:57\n\n### WTI原油期货跌幅扩大至14%，报81.387美元/桶\n\n每日经济新闻 2026-04-17 22:42:38",
+        "score": 0.8976953
+      },
+      {
+        "title": "板块分析 - 股票- 东方财富",
+        "url": "https://stock.eastmoney.com/xuexiao/xx523.html",
+        "content": "“开门红”！国内能化品种集体走强 甲醇将成后市焦点\n 板块轮动 轮到原油了？\n\n  暂停2026年3月的增产。 　　此外，他们还强调其共同承诺，即全面遵守合作宣言，并确认将对自2024年1月以来任何超额生产的产量进行全额补偿。 板块轮动，轮到原油了？ 　　上周，国际油价上演“过山车”行情，在美伊局势紧张与缓和的交替影响下大幅冲高后回调。期货日报记者在采访中了解到，地缘政治事件主导了短期的油价波动\n 新湖期货化工研发总监施潇涵指出，合成橡胶、PX、PTA等品种靠基本面支撑，乙二醇为超跌反弹，甲醇、LPG等受伊朗地缘因素扰动，PVC则属于跟随上涨，宏观资金对板块轮动、产能大周期的预期也成为推涨因素。 　　“化工牛”是拐点已至还是情绪使然？ 　　化工市场的强势表现下，市场对行情性质判断产生一定分歧，核心争议为此次上涨是长期周期拐点\n 热点 | 供给端扰动 焦煤持续大涨\n\n  退出保供名单的煤矿意味着原先核增产能等政策支持将不再适用，使得市场对于保供产能的预期发生变化。此外，从估值的角度来看，黑色此前价格均处于低位，在目前商品板块轮动明显的背景下，资金对于价格洼地的品种也更加青睐，当前唐山蒙煤仓单成本处于1150元/吨附近，盘面已拉至升水，随着后续无风险套利窗口的打开\n 美俄联合发布！普京：真诚希望结束俄乌冲突 特朗普称未达成协议但进展巨大\n\n  特朗普曾表示，他将对进口半导体征收100%的关税，但承诺在美国建立制造业的公司将被豁免。 　　受上述消息影响，周五美股盘中，半导体概念股集体跳水，板块指数跌幅一度超过2%。其中，拉姆研究、科天半导体跌超7%，美光科技跌近5%，盛美半导体跌超4%。 A股再度飙升，市场人士：涨势还会持续 　　A股15日再度飙升\n 中证1000股指期货（IM）主力合约日内涨幅达2.00% [...] 展望后市，前期大宗商品价格的持续上涨对制造业利润的侵蚀仍在继续，预计大宗商品的预期管理仍将延续。　　在钟美燕看来，能化和农产品有望持续成为市场热点板块。\n 农资标的投机降温 “有形之手”发力稳定市场预期\n\n  6月28日，国内煤炭相关股票、期货价格应声走弱。早盘，煤炭期货率先走弱，盘中跌幅不断扩大；A股煤炭板块开盘后持续走低。截至昨日收盘，文华财经煤炭板块指数下跌4.72%，动力煤期货主力合约盘中一度创下6月4日以来新低788.0元/吨，最终收报790.2元/吨，跌7.23%；焦煤、焦炭期货分\n 股指流动性良好 可择机买入\n\n  上周五北上资金成交净买入额更是达到141亿元，为年内第五。行业方面，非银金融、钢铁、化工、有色板块领涨，通信、公用事业、计算机板块领跌，板块轮动效应依然明显。此外，在上周五个交易日中，无论北上资金流入还是流出，两市成交额始终维持在万亿元之上，说明随着7月1日重大庆典的临近，市场风险偏好较端午节后那周出现明显回升\n 氨纶价格暴涨 库存将至4年新低！业绩预增行情来了 美锦能源带动板块起舞\n\n  今年以来氨纶20D、氨纶40D分别累计上涨95.9%和84.6%，如从去年8月低点算起，氨纶价格同比暴涨150%。　　受此影响，今日化纤股普涨，板块指数放量高开高走，盘中一度飙升近6%领涨两市，半日成交超昨日全体成交。聚杰微纤盘中一度触及20%涨停，恒力石化、南京化纤、新乡化纤也直线拉升封死涨停板\n 沪胶 多头配置机会显现 [...] 外资有望在加息边际放缓预期下重新加速流入；结合过去20年14次熊市反弹过后存在震荡整理的需求背景下，我们认为8月市场在业绩密集披露期的波动或将有所加大。　　我们建议在板块轮动间寻找胜率-赔率最优、景气预期上修方向布局。回溯历史、立足当下，我们建议8月关注三条主线：1) 资源品。2) 成长板块。3) 消费板块。\n 中证1000指数继续强势 两市日成交额重上万亿元\n\n  叠加疫情防控形势持续向好、消费需求复苏，下半年消费电子需求有望回暖。　　机构认为，当前消费电子板块整体估值较低，看好未来修复空间。据安信证券统计，截至7月25日，申万消费电子板块指数PE为29.58倍，处于历史低估区间。　　昨日芯片股也持续走强，华微电子、闻泰科技、长电科技、华天科技等涨超5%。　　湘财证券认为，今年二季度\n 需求不振钢价下跌 20家钢企上半年业绩预减\n\n  对于铁矿石、焦炭的需求将减弱，叠加保供稳价政策效力逐步显现，钢企成本压力有望得到缓解。”　　二级市场方面，截至7月25日收盘，A股市场钢铁板块指数(申万)年内已累计下跌14.04%。　　叶银丹认为，从需求端来看，钢铁行业已迎来拐点。下半年经济逐步复苏将带动钢铁需求回暖。从成本端来看\n 国际大宗市场再度深跌 原油击穿100美元/桶关口\n\n  对于大宗商品存在趋势见顶回落风险的判断不应有太多质疑。在上半年化工利润持续低位、4月以来有色系趋势下行以及6月以来黑色系开启大跌后，原油受到的板块轮动下行压力较大。长期来看，如果6月下至7月上旬油价能够企稳反弹，三季度或仍有一次力度更大的调整，潜在下行空间较上半年高点或有20%-30%\n 国内金价月内跌超13元/克 专家预计短期难回升势",
+        "score": 0.4941409
+      },
+      {
+        "title": "Search Landing - ..rteredaccountants.ie",
+        "url": "https://www.charteredaccountants.ie/search-landing?searchQuery=%E7%A6%8F%E5%BD%A93d%E6%99%9A%E9%97%B4%E5%AD%97%E8%B0%9C%E6%80%BB%E6%B1%87%E5%A4%A7%E5%85%A8%E3%80%90%E5%AD%A6%E8%B0%B7%E6%AD%8C%E5%9B%BD%E5%A4%96%E7%9B%98%E9%9C%B8%E5%B1%8F%E6%8A%80%E6%9C%AF%E2%86%92%E6%89%93%E5%BC%80%E7%BD%91%E6%AD%A2%20a57688%EF%BC%8Ecc%E3%80%91%E6%8D%95%E9%B1%BC%E6%B8%B8%E6%88%8F%E7%94%B5%E7%8E%A9%E5%9F%8E%E3%80%90%E5%AD%A6%E8%B0%B7%E6%AD%8C%E5%9B%BD%E5%A4%96%E7%9B%98%E9%9C%B8%E5%B1%8F%E6%8A%80%E6%9C%AF%E2%86%92%E6%89%93%E5%BC%80%E7%BD%91%E6%AD%A2%200hh4%EF%BC%8Evip%E3%80%91%E6%B3%95%E7%94%B2%E4%B9%B0%E7%90%83%E5%AE%98%E7%BD%91%E4%B8%8B%E8%BD%BD%E3%80%90%E5%AD%A6%E8%B0%B7%E6%AD%8C%E5%9B%BD%E5%A4%96%E7%9B%98%E9%9C%B8%E5%B1%8F%E6%8A%80%E6%9C%AF%E2%86%92%E6%89%93%E5%BC%80%E7%BD%91%E6%AD%A2%208wxi%EF%BC%8Evip%E3%80%91&indexCatalogue=_all",
+        "content": "# Search Landing - ..rteredaccountants.ie\n\nImage 1: logo\n\n attacks.Maximum Storage Duration: SessionType: HTTP Cookie  __Secure.ASP.NET_SessionIdMaintains a unique, secure session ID to keep the user authenticated and preserve their state across page requestsMaximum Storage Duration: SessionType: HTTP Cookie   \n\n   \nPreferences 9- [x]    Preference cookies enable a website to remember information that changes the way the website behaves or looks, like your preferred language or the region that you are in. [...] ☰\n   Find a firm  \n   Jobs  \n\n   Login)\n\nImage 21\n\n☰\n   Home  \n   Knowledge centre  \n   Professional development  \n   About us  \n   Shop  \n   News  \n\n[](\n\nSearch\n\n0\n\nView CartImage 220 Item[](\n\nNo results were found for 福彩3d晚间字谜总汇大全【学谷歌国外盘霸屏技术→打开网止 a57688．cc】捕鱼游戏电玩城【学谷歌国外盘霸屏技术→打开网止 0hh4．vip】法甲买球官网下载【学谷歌国外盘霸屏技术→打开网止 8wxi．vip】\n\nIf you looking for a specific page and you can’t find it here, you can send an email to webmaster@charteredaccountants.ie and we will try and help you find what you are looking for.\n\n[](\n\n## The latest news to your inbox\n\nPlease enter a valid email addressYou have entered an invalid email address.\n\n## Useful links\n\n   Current students\n   Becoming a student\n   Knowledge centre\n   Shop\n\n   District societies\n\n## Get in touch\n\n Dublin HQ\n\nChartered Accountants [...] Unclassified 0 Unclassified cookies are cookies that we are in the process of classifying, together with the providers of individual cookies.      \nWe do not use cookies of this type.  \n\n[Cross-domain consent[#BULK_CONSENT_DOMAINS_COUNT#]](\n\n[#BULK_CONSENT_TITLE#]\n\nList of domains your consent applies to: [#BULK_CONSENT_DOMAINS#]\n\nCookie declaration last updated on 4/1/26 by Cookiebot\n\n[#IABV2_TITLE#]\n\n[#IABV2_BODY_INTRO#]\n\n[#IABV2_BODY_LEGITIMATE_INTEREST_INTRO#]\n\n[#IABV2_BODY_PREFERENCE_INTRO#]\n\n[#IABV2_LABEL_PURPOSES#]\n\n[#IABV2_BODY_PURPOSES_INTRO#]\n\n[#IABV2_BODY_PURPOSES#]\n\n[#IABV2_LABEL_FEATURES#]\n\n[#IABV2_BODY_FEATURES_INTRO#]\n\n[#IABV2_BODY_FEATURES#]\n\n[#IABV2_LABEL_PARTNERS#]\n\n[#IABV2_BODY_PARTNERS_INTRO#]\n\n[#IABV2_BODY_PARTNERS#]\n\nAbout",
+        "score": 0.011552671
+      },
+      {
+        "title": "Search Landing - ..rteredaccountants.ie",
+        "url": "https://www.charteredaccountants.ie/search-landing?searchQuery=%E8%B0%B7%E6%AD%8C%E6%B5%8F%E8%A7%88%E5%99%A8%E5%8F%AF%E4%BB%A5%E7%99%BB%E5%BD%95%E5%B8%90%E5%8F%B7%E5%90%97%E2%98%85%E2%98%85%E2%98%85%E3%80%90%E8%B0%B7%E6%AD%8C%E9%A6%96%E9%A1%B5%E6%8E%92%E5%90%8D%E5%89%8D%E4%B8%89%E6%8A%80%E6%9C%AF+QQ%EF%BC%9A%E3%80%A54%E3%80%A59%E2%92%8E%E3%80%A57O%E3%80%91%E2%98%85%E2%98%85%E2%98%85%E8%B0%B7%E6%AD%8Cchrome%E5%AE%89%E8%A3%85%E5%8C%85%E2%98%85%E2%98%85%E2%98%85%E3%80%90%E5%BF%85%E5%BA%94%E9%A6%96%E9%A1%B5%E6%8E%92%E5%90%8D%E5%89%8D%E4%B8%89%E6%8A%80%E6%9C%AF+V%E4%BF%A1%EF%BC%9A7%D0%A7%E2%92%8EO%D0%977%D0%91%E2%92%94%E3%80%91%E2%98%85%E2%98%85%E2%98%85imtoken%E5%86%B7%E9%92%B1%E5%8C%85%E4%B8%8B%E8%BD%BD%E5%AE%98%E7%BD%91%E2%98%85%E2%98%85%E2%98%85%E3%80%90%E8%B0%B7%E6%AD%8C%E9%A6%96%E9%A1%B5%E6%8E%92%E5%90%8D%E5%89%8D%E4%B8%89%E6%8A%80%E6%9C%AF+QQ%EF%BC%9A7%D0%97%E2%92%985%D0%A722%E2%92%8E%E3%80%91%E2%98%85%E2%98%85%E2%98%85&indexCatalogue=_all",
+        "content": "# Search Landing - ..rteredaccountants.ie\n\nImage 1: logo\n\n attacks.Maximum Storage Duration: SessionType: HTTP Cookie  __Secure.ASP.NET_SessionIdMaintains a unique, secure session ID to keep the user authenticated and preserve their state across page requestsMaximum Storage Duration: SessionType: HTTP Cookie   \n\n   \nPreferences 9- [x]    Preference cookies enable a website to remember information that changes the way the website behaves or looks, like your preferred language or the region that you are in. [...] ☰\n   Find a firm  \n   Jobs  \n\n   Login)\n\nImage 21\n\n☰\n   Home  \n   Knowledge centre  \n   Professional development  \n   About us  \n   Shop  \n   News  \n\n[](\n\nSearch\n\n0\n\nView CartImage 220 Item[](\n\nNo results were found for 谷歌浏览器可以登录帐号吗★★★【谷歌首页排名前三技术 QQ：〥4〥9⒎〥7O】★★★谷歌chrome安装包★★★【必应首页排名前三技术 V信：7Ч⒎OЗ7Б⒔】★★★imtoken冷钱包下载官网★★★【谷歌首页排名前三技术 QQ：7З⒘5Ч22⒎】★★★\n\nIf you looking for a specific page and you can’t find it here, you can send an email to webmaster@charteredaccountants.ie and we will try and help you find what you are looking for.\n\n[](\n\n## The latest news to your inbox\n\nPlease enter a valid email addressYou have entered an invalid email address.\n\n## Useful links\n\n   Current students\n   Becoming a student\n   Knowledge centre\n   Shop\n\n   District societies\n\n## Get in touch\n\n Dublin HQ [...] Unclassified 0 Unclassified cookies are cookies that we are in the process of classifying, together with the providers of individual cookies.      \nWe do not use cookies of this type.  \n\n[Cross-domain consent[#BULK_CONSENT_DOMAINS_COUNT#]](\n\n[#BULK_CONSENT_TITLE#]\n\nList of domains your consent applies to: [#BULK_CONSENT_DOMAINS#]\n\nCookie declaration last updated on 4/1/26 by Cookiebot\n\n[#IABV2_TITLE#]\n\n[#IABV2_BODY_INTRO#]\n\n[#IABV2_BODY_LEGITIMATE_INTEREST_INTRO#]\n\n[#IABV2_BODY_PREFERENCE_INTRO#]\n\n[#IABV2_LABEL_PURPOSES#]\n\n[#IABV2_BODY_PURPOSES_INTRO#]\n\n[#IABV2_BODY_PURPOSES#]\n\n[#IABV2_LABEL_FEATURES#]\n\n[#IABV2_BODY_FEATURES_INTRO#]\n\n[#IABV2_BODY_FEATURES#]\n\n[#IABV2_LABEL_PARTNERS#]\n\n[#IABV2_BODY_PARTNERS_INTRO#]\n\n[#IABV2_BODY_PARTNERS#]\n\nAbout",
+        "score": 0.011552671
+      },
+      {
+        "title": "Search Landing - ..rteredaccountants.ie",
+        "url": "https://www.charteredaccountants.ie/search-landing?searchQuery=%E7%9C%9F%E4%BA%BAag%E7%99%BE%E5%AE%B6%E4%B9%90%E7%BD%91%E5%9D%80%E2%98%85%E2%98%85%E2%98%85%E3%80%90%E8%B0%B7%E6%AD%8C%E7%99%BE%E5%BA%A6%E4%BB%A3%E5%8F%91+QQ%EF%BC%9A%E3%80%A5%E2%92%98%E2%92%8C%E2%92%9325%E3%80%91%E2%98%85%E2%98%85%E2%98%85%E5%88%A9%E8%B1%AA%E6%B8%B8%E6%88%8F%E6%89%8B%E6%9C%BA%E4%B8%8B%E8%BD%BD%E2%98%85%E2%98%85%E2%98%85%E3%80%90%E8%B0%B7%E6%AD%8C%E7%99%BE%E5%BA%A6%E4%BB%A3%E5%8F%91+QQ%EF%BC%9A29%D0%A7%D0%B7%D0%917%E2%92%909%E3%80%91%E2%98%85%E2%98%85%E2%98%85%E5%BF%85%E4%B8%80%E4%BD%93%E8%82%B2%E5%AE%98%E6%96%B9%E7%BD%91%E7%AB%99%E2%98%85%E2%98%85%E2%98%85%E3%80%90%E8%B0%B7%E6%AD%8C%E7%99%BE%E5%BA%A6%E4%BB%A3%E5%8F%91+QQ%EF%BC%9A7%E2%92%8A%E2%92%985%D0%A7227%E3%80%91%E2%98%85%E2%98%85%E2%98%85&indexCatalogue=_all",
+        "content": "View all the services available for students of the Institute\n\nStudy with us\n\nView member services\n\nServices to support your business\n\n|  |\n\n| View Cart   0 Item |\n\nNo results were found for 真人ag百家乐网址★★★【谷歌百度代发 QQ：〥⒘⒌⒓25】★★★利豪游戏手机下载★★★【谷歌百度代发 QQ：29ЧзБ7⒐9】★★★必一体育官方网站★★★【谷歌百度代发 QQ：7⒊⒘5Ч227】★★★\n\n## The latest news to your inbox\n\n## \n\n## Useful links\n\n## Get in touch\n\nChartered Accountants  \nHouse, 47-49 Pearse St,   \nDublin 2, D02 YN40, Ireland\n\nThe Linenhall  \n32-38 Linenhall Street, Belfast,  \nAntrim, BT2 8BG, United Kingdom\n\n## Connect with us\n\nChartered Accountants Worldwide homepage\nGlobal Accounting Alliance homepage\nAccounting Bodies Network homepage\n\n© Copyright Chartered Accountants Ireland 2020. All Rights Reserved.",
+        "score": 0.005240449
+      },
+      {
+        "title": "下周，A股这些板块更有望上涨 | 每经网",
+        "url": "https://www.nbd.com.cn/articles/2025-11-02/4126689.html",
+        "content": "其认为，资本市场的三大逻辑将长期并存，红利资产、科技创新、黄金三类资产呈轮动特征。因此，继续坚持红利资产和科技创新的哑铃配置策略，继续坚持大类资产配置和动态择时原则。\n\n“11月，无新增推荐，将通信、半导体、电子、传媒、人形机器人指数暂时移出关注范围。建议继续关注红利、光伏、旅游、证券。”\n\n总之，下周出现哪种情况都有合理之处，短线投资者更需关注如何跟上市场变化的节奏。\n\n接下来，带大家梳理周末消息面。\n\n美财长称中美贸易协定最早于下周签署，外交部回应\n\n美国财长贝森特表示，中美贸易协定最早可以于下周进行签署。外交部发言人郭嘉昆在10月31日的例行记者会上表示，中美元首在釜山会晤期间，讨论了经贸关系等议题，同意加强经贸等领域的合作。中方主管部门昨天（周四）也介绍了吉隆坡经贸磋商的成果。\n\n两部门明确黄金有关税收政策\n\n根据公告，在2027年底前，对会员单位或客户通过上海黄金交易所、上海期货交易所交易标准黄金，卖出方会员单位或客户销售标准黄金时，免征增值税。未发生实物交割出库的，交易所免征增值税；发生实物交割出库的，区别标准黄金的投资性用途和非投资性用途，分别按规定适用增值税即征即退政策，以及免征增值税、买入方按照6%扣除率计算进项税额政策。\n\n五部门印发《关于完善免税店政策支持提振消费的通知》\n\n文件明确，自2025年11月1日起完善免税店政策，旨在进一步发挥免税店政策支持提振消费的作用，引导海外消费回流，促进免税商品零售业务健康有序发展。\n\n国常会部署加快场景培育和开放推动新场景大规模应用有关举措\n\n商务部回应安世半导体相关问题：将对符合条件的出口予以豁免\n\n多家新能源汽车品牌公布“银十”销量\n\n我国实现全球首次基于熔盐堆的钍铀核燃料转换\n\n英伟达与三星电子、SK集团等韩国大公司达成人工智能重大合作协议\n\n最后，来看看部分下周大事。\n\n11月3日（周一） [...] 1  发展“村播”“田播”⋯⋯商务部等6部门发文支持电子商务高质量发展\n 2  中东局势传来重磅消息！本周A股会反弹吗？——道达对话牛博士\n 3  美国重磅数据公布，美联储今年降息悬了！会不会转向加息？高盛给出四个理由：“可能性很小”\n 4  伊朗拒绝临时停火！对于美方停战提议，伊朗提出10项条款：包括永久结束战争，制定霍尔木兹海峡安全通行协议等；美方已收到回应\n 5  欧佩克宣布增产原油\n 6  【美股盘前】三大期指齐涨；布油失守108美元/桶，石油股走低；现货黄金向上触及4700美元；存储股普涨，闪迪涨超4%；大型科技股多数上涨，特斯拉、Meta涨超1%\n 7  日韩股市集体收涨，日经225指数涨0.55%，韩国KOSPI指数涨1.36%丨日韩股市\n 8  易烊千玺被“换脸”？红果短剧：坚决打击AI短剧素材违规使用、无授权盗用等行为\n 9  美以伊冲突首月非农数据远超预期，新增17.8万就业是表象，加州汽油价格飙至5.88美元，美联储降息预期归零，但加息仍远\n 10  百亿私募大佬怒怼小米后紧急澄清！业绩回撤、假榜单疯传，私募圈一季度风波不断\n\n0)\n\n每经网\n\n 相关信息\n 关于我们\n 版权声明\n\n 联系我们\n 广告投放\n 友情链接\n\n 关注我们\n 辟谣专区\n\n 加入我们\n 每日经济新闻\n 成都市天府科幻企业管理\n 拟聘人员公示\n\nCopyright © 2026 每日经济新闻报社版权所有，未经许可不得转载使用，违者必究。\n\n广告热线  北京: 010-57613265， 上海: 021-61283008， 广州: 020-84201861， 深圳: 0755-83520159， 成都: 028-86512112 [...] 二是，哪些板块下周更有望走强？ 或者更直白地说，你更看好科技线反弹，还是本周承接了部分科技线出逃资金的非科技题材继续表现？ 同花顺数据显示，行业指数中，本周新能源赛道下的能源金属、电池、光伏设备，以及医药方向的部分题材表现强势。此外AI应用端（软件开发）、种植业等方向也局部活跃。 有统计显示，行业板块层面，31个申万一级板块中，除煤炭、国防军工近20年11月期间上涨比例为50%外，其余29个板块该比例均过半。其中，电子、食品饮料、纺织服饰、轻工制造、建筑材料、电力设备、汽车、机械设备、环保板块上涨比例在7成以上。 若以平均涨幅统计，建筑材料、房地产、环保、机械设备、食品饮料、家用电器板块“历史战绩”相对较佳。 前述太平洋证券研报称，展望后市，科技类吸筹率仍显较高，目前仍高于35%，从高位回落的时间和空间依旧不足（2023年以来从高位回落时间基本在1个季度）。其认为，板块选择上，维持此前判断，相较于高位高波动的科技股，波动仍低的“旧”势力板块是四季度更易获得超额收益。 金圆统一证券研报则表示，对已持仓的价值投资者，底仓可聚焦中长期逻辑，淡化并容忍波动：机动仓可借冲高择机兑现收益。持币者则可坚持“业绩-估值”匹配原则，逢回调布局业绩红利资产或业绩确定性板块；优先配置宽基或行业ETF。 其认为，资本市场的三大逻辑将长期并存，红利资产、科技创新、黄金三类资产呈轮动特征。因此，继续坚持红利资产和科技创新的哑铃配置策略，继续坚持大类资产配置和动态择时原则。 “11月，无新增推荐，将通信、半导体、电子、传媒、人形机器人指数暂时移出关注范围。建议继续关注红利、光伏、旅游、证券。” 总之，下周出现哪种情况都有合理之处，短线投资者更需关注如何跟上市场变化的节奏。 接下来，带大家梳理周末消息面。 美财长称中美贸易协定最早于下周签署，外交部回应",
+        "score": 0.511644
+      },
+      {
+        "title": "A股：大家坐稳扶好，信号很强烈，下周一，很可能迎来新的转变|纽约原油CFD|纳斯达克|三大股指|全球股市|国际油价_新浪新闻",
+        "url": "https://k.sina.com.cn/article_7879996580_1d5af34a402001qjq0.html",
+        "content": "下周一，很可能迎来新的转变\n\n　　从情绪上来看，两市2396家上涨，2986家下跌，市场还是比较均衡的。目前随着行情稳定，市场还是有反弹的趋势。从板块轮动来看，半导体、电力设备、电子等表现不错。随着光通信、CPO等反复活跃，市场还是有再次发力的迹象。短期市场全线反弹下，A股还是有向上突破压力的趋势了。\n\n　　从大盘周线级别来看，目前两连阳了，市场还是有向上突破压力的趋势。目前上方压力是在4112点附近。短期大盘还是有再次触及整数关口以上的迹象。\n\n　　从大盘120分钟级别来看，大盘还是在5日均线之上，那么，问题就不大。后续还是需要突破箱体震荡，才能迎来新的反弹行情。目前大盘还是支撑较强的。短期向下调整的空间并不是很大。目前支撑还是在4028点附近了。短期大盘还是震荡上行的概率大一些。\n\n　　总结\n\n　　随着美股走强，短期市场还是有所回升的，中概股也在企稳，市场短期并未出现较大变化的话，短期A股还是会蓄势反弹的。\n\n　　目前随着A股对中东局势的脱敏，A股还是会走出独特行情的。短期券商若能再次发力的话，A股还是会迎来新一轮反弹行情的。调整一下策略，顺势而为。\n\n声明：以上均为个人见解，不能作为投资建议，股市有风险，投资需谨慎。\n\n　　#现在的股市你怎么看？#​#A股接下来怎么走#​\n\n赛博对话\n热搜时代\n一天零一页\n无双\n热浪之外\n\n### 图片新闻\n\n伊朗：德黑兰举行反美反以色列集会\n美国：特朗普乘坐空军一号\n2026北京牡丹文化节开启视觉盛宴\n杭州：径山花海春色如画\n以色列剧本被撕了\n\n特朗普再骂北约纸老虎\n\n大熊猫背靠背干饭\n\n鸡排哥打卡莫氏鸡煲\n\n### 新媒体实验室\n\n朋友圈47%的内容在炫耀\n近300起杀妻案如何判罚\n谈恋爱反降低生活质量？\n全国最能吃的省市竟是它\n性犯罪者再犯几率达12.8%\n\n举报邮箱：jubao@vip.sina.com [...] 新浪新闻客户端\n新浪新闻客户端\n\n# 新浪看点\n\n新浪新闻客户端\n新浪新闻公众号\n新浪新闻视频号\n新浪新闻抖音\n新浪新闻快手\n新浪新闻小红书\n新浪新闻B站\n热搜时代小宇宙\n\n# A股：大家坐稳扶好，信号很强烈，下周一，很可能迎来新的转变\n\navatar\n\n　　大盘再次放量上涨，释放什么信号？从外部影响来看，伊朗开放霍尔木兹海峡，隔夜美股三大股指集体上涨1％以上，全球股市还是有短暂升温的可能。目前国际油价大跌，市场短期迎来新的转变了。目前随着市场重回正轨，A股能否迎来新一轮上升行情？从尾盘来看，科技成长的反弹来看，A股或走上了独特行情。下周一，大盘或会再次向上发力突破压力了。那么，是涨是跌？我来给大家分析一下。\n\n　　从三大股指涨跌互现来看，沪指虽然偏弱，但是整体还是比较强的。尾盘再次站上4050点，说明行情还是有所企稳的，目前市场短期还是有上升的趋势。尤其是大盘还是在5日均线之上，说明市场短期并未有调整的迹象。目前行情还是在慢慢回暖，市场放量上涨下，大盘还是韧性较强的。\n\n　　创业板指创十一年新高，行情再次说明创业板指还是有走上升趋势的行情。尤其是站上3600点之后，行情还是有加速的迹象。目前创业板指上方空间压力并不是很大了。短期震荡上行的可能还在。目前市场还是会稳步回升的。科创50的反弹也说明行情在慢慢回暖。两创指数的回升，科技板块也在慢慢发力。\n\n　　券商的十字星状态说明行情短期还是比较谨慎，不过，从外部影响来看，市场还是有再次蓄势的可能。尤其是券商在尾盘拉升，行情还是有弱转强的迹象。若是企稳，大盘还是会延续反弹行情。\n\n　　港股探底回升，尾盘也出现了回暖信号，尤其是还是在5日均线之上，说明短期反弹还未结束。后续持续可能很大，整个市场还是有修复反弹的可能。那么，A股也会迎来新的变化。\n\n　　下周一，很可能迎来新的转变 [...] 举报邮箱：jubao@vip.sina.com\n\nCopyright © 1996-2026 SINA Corporation\n\nAll Rights Reserved 新浪公司 版权所有\n\n###",
+        "score": 0.5005133
+      },
+      {
+        "title": "富途牛牛帮助中心-行情图表如何查看历史K线的每日分时图表",
+        "url": "https://support.futunn.com/topic43",
+        "content": "Sample Code\n\n +5.16% 4\n\n优刻得-W\n\n688158\n\n -10.33% 5\n\n顺网科技\n\n300113\n\n -13.59%\n\n查看更多\n\n投资用富途！  投资用富途！\n\n热点话题  热点话题\n\n中东战火燃至股市！投资者该如何应对？\n\n美、伊与地区调停方正就一项分阶段停火方案展开最后博弈。伊朗正式回应美国停火提议，提出10项核心条款要求永久停战及霍尔木兹海峡安全通航机制。美国拒绝该方案，特朗普强硬要求控制伊石油收益并设立海峡通行收费规则，谈判最后期限推迟1天到美东时间4月7日晚上8点（北京时间4月8日早上8点） 展开\n\n牛牛課堂\n\n03/04 17:09\n\n长期有答案 | 左手账户缩水，右手被时代追赶——做那个炮火永远轰不掉的人\n\n牛牛課堂\n\n03/18 18:18\n\n霍尔木兹、期限结构与USO：如何穿越能源风暴\n\n- 没有更多了 - [...] arrow_right  投资组合介绍\n\n  + 投资组合介绍\n\n arrow_right  牛牛组件\n\n  + 新版小组件操作指引\n  + 小组件操作指引\n  + 安卓小组件操作指引\n  + 牛牛桌面端WEB组件使用指引\n  + 锁屏小组件操作指引\n\n arrow_right  导出市场列表信息\n\n  + 导出市场列表信息\n\n arrow_right  SSL连接错误操作指引\n\n  + SSL连接错误操作指引\n\n arrow_right  牛牛AI\n\n  + 牛牛AI\n\n# 行情图表如何查看历史K线的每日分时图表\n\n## 1. 移动端\n\n在个股页的日k图中，长按唤出十字线，单击查看当日分时，即可查看当日历史k线的每日分时图表。\n\n## 2. 桌面端\n\n在个股页的日k图中，双击对应的k线即可查看当日历史k线的每日分时图表。\n\n是否有帮助？\n\n是 否\n\n原因是：\n\n提交\n\n## 本篇目录\n\n 1. 移动端\n 2. 桌面端\n\n热门市场机会\n\n石油股 石油股\n\n石油股\n\n序号  代码  20日涨跌幅\n\nSample Name\n\nSample Code\n\n +4.97% Sample Name\n\nSample Code\n\n +0.60% Sample Name\n\nSample Code\n\n -8.31% 4\n\n中国石油化工股份\n\n00386\n\n -11.73% 5\n\n中国油气控股\n\n00702\n\n -12.82%\n\n查看更多\n\nOpenClaw概念 OpenClaw概念\n\n序号  代码  20日涨跌幅\n\nSample Name\n\nSample Code\n\n +12.24% Sample Name\n\nSample Code\n\n +8.89% Sample Name\n\nSample Code\n\n +5.16% 4\n\n优刻得-W\n\n688158\n\n -10.33% 5\n\n顺网科技 [...] + arrow_right  技术面解读\n\n    - 技术面解读\n  + arrow_right  个股形态\n\n    - 三重底\n    - 喇叭底\n    - W型底\n    - 头肩底\n    - 看涨对称三角形\n    - 看涨旗形\n    - 看涨持续菱形\n    - 圆弧底\n    - 看涨持续楔形\n    - 看涨持续三角形\n    - 喇叭顶\n    - 看跌持续楔形\n    - 看跌持续三角形\n    - M型顶\n    - 看跌对称三角形\n    - 看跌旗形\n    - 头肩顶\n    - 三重顶\n    - 看跌持续菱形\n    - 圆弧顶\n  + arrow_right  量价理论\n\n    - 什么是量价理论\n    - 量价理论的八种关系\n    - 怎样研判成交量的变化\n    - 尾盘成交量蕴含的背后含义\n    - 价升量先行换手率见玄机\n  + arrow_right  指标介绍\n\n    - MAVOL 成交量均线\n    - KDJ 随机指标\n    - MACD指数平滑异同移动平均线\n    - ARBR 情绪指标\n    - CR 能量指标\n    - DMA 平行线差\n    - EMV 简易波动指标\n    - RSI 相对强弱指标\n    - MA 移动平均线\n    - BOLL 布林线\n    - EMA 指数平滑移动平均线\n    - SAR 停损点转向指标\n    - WMSR 威廉指标\n    - BIAS 乖离率\n    - CCI 商品通道指标\n    - PSY 心理线\n    - VR 容量指标\n    - OSC 震荡指标\n    - NINE 神奇九转\n\n arrow_right  投资组合介绍\n\n  + 投资组合介绍\n\n arrow_right  牛牛组件",
+        "score": 0.43194416
+      },
+      {
+        "title": "板块聚焦 _ 东方财富网",
+        "url": "https://stock.eastmoney.com/a/cbkjj.html",
+        "content": "专题\n\n更多\n\n 04月16日 盘前必读4月17日\n 04月16日 创业板指创近11年新高\n 04月15日 盘前必读4月16日\n 04月14日 盘前必读4月15日\n 04月14日 我国将健全药品价格形成机制\n 04月14日 3月宏观经济数据\n\n评论精华\n\n更多\n\n \n\n  华泰证券：建议重点关注具备全球布局和全产业链优势、降本能力强的整车企业\n \n\n  华泰证券：国内游和入境游双轮驱动OTA景气\n \n\n  中信证券：高质量红利资产的中期配置价值仍具备较强支撑\n \n\n  中信证券：看好激光器芯片龙头公司未来发展潜力\n \n\n  开源证券：关注情绪消费主题下的高景气赛道优质公司\n\n资讯精华\n\n更多\n\n \n\n  伊朗议长：特朗普7项社媒声明“均不属实”\n \n\n  全球市场：美股三大指数均涨逾1% 纳指13连涨 标普续创新高 美油跌近8%\n \n\n  伊朗发布船舶通行霍尔木兹海峡新规 强调有条件暂时开放\n \n\n  2万亿“宁王”大动作！第四大股东拟询价转让超250亿元股份！\n \n\n  人形机器人半马明日开跑 这份比赛看点和队伍解析请收好\n\n郑重声明：东方财富网发布此信息的目的在于传播更多信息，与本站立场无关。东方财富网不保证该信息（包含但不限于文字、视频、音频、数据及图表）全部或者部分内容的准确性、真实性、完整性、有效性、及时性、原创性等。相关信息并未经过本网站证实，不对您构成任何投资建议，据此操作，风险自担。\n\n东方财富\n\n  \n扫一扫下载APP\n\n东方财富产品\n\n 东方财富免费版\n 东方财富Level-2\n 东方财富策略版\n 妙想投研助理\n Choice金融终端\n\n证券交易\n\n 东方财富证券开户\n 东方财富在线交易\n 东方财富证券交易\n\n关注东方财富\n\n 东方财富网微博\n 东方财富网微信\n 意见与建议\n\n扫一扫下载APP [...] 财经\n 焦点\n 股票\n 新股\n 期指\n 期权\n 行情\n 数据\n 全球\n 美股\n 港股\n 期货\n 外汇\n 银行\n 基金\n 理财\n 债券\n 直播\n 股吧\n 基金吧\n 博客\n 财富号\n 搜索\n\n | 更多\n\n沪深\n\n香港\n\n欧美\n\n基金\n\n期货\n\n外汇\n\n沪A\n:   |\n\n深A\n:   |\n\n创业板\n:   |\n\n300\n:   |\n\n东方财富\n\n恒生\n:   |\n\n红筹\n:   |\n\n国企\n:   |\n\n创业板\n\n道琼斯\n:   |\n\n纳斯达克\n:   |\n\n英国FT\n\n沪基\n:   |\n\n深基\n\n股指期货\n:   |\n\n国债期货\n:   |\n\n美原油\n:   |\n\n美黄金\n\n美元\n:   |\n\n欧元\n:   |\n\n英镑\n:   |\n\n日元\n:   |\n\n人民币\n\n## 网友点击排行榜\n\n 1 龙头股业绩炸裂 高盛再看涨40%！CPO概念“起飞” 8股今年净利有望倍增\n 2 武汉长江存储一季度收入已超200亿元 正进行“史诗级扩产”\n 3 神二十三发射、重复使用火箭飞行验证 今年中国航天重点任务发布\n 4 证监会：2025年查办操纵市场获利超亿元案件19起\n 5 创业板指涨1.43%续创近11年新高 光模块概念股爆发\n 6 伊朗外长：黎以停火期间对所有商船开放霍尔木兹海峡\n 7 4月17日晚间沪深上市公司重大事项公告最新快递\n 8 光模块“卖铲人”梳理！一图看懂相关概念股\n 9 巨头纷纷布局！玻璃基板多股涨停 融资客抢筹股曝光（名单）\n 10 减持“红线”升级！证监会出手 新规征求意见\n\n财经视频\n\n更多\n\n- 穿越至少四轮牛熊的20年市场老兵，详解2026股市生存法则｜对话淇河张文中\n- 20年基金实战！从股票亏惨到定投微笑曲线，普通人稳赢配置法｜对话养基司令\n\n专题\n\n更多",
+        "score": 0.30750406
+      }
+    ]
+  }
+]

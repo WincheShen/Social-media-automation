@@ -105,8 +105,10 @@ export interface ImageGenModelInfo {
 }
 
 export const IMAGE_GEN_MODELS: ImageGenModelInfo[] = [
-  { id: "gpt-image-1", display_name: "GPT Image 1 (OpenAI)", provider: "openai" },
+  { id: "gemini-2.5-flash-image", display_name: "Gemini 2.5 Flash Image", provider: "google" },
+  { id: "imagen-4.0-fast", display_name: "Imagen 4.0 Fast", provider: "google" },
+  { id: "imagen-4.0-ultra", display_name: "Imagen 4.0 Ultra", provider: "google" },
+  { id: "gpt-image-1", display_name: "GPT Image 1", provider: "openai" },
   { id: "dall-e-3", display_name: "DALL-E 3", provider: "openai" },
-  { id: "flux-schnell", display_name: "Flux Schnell (Replicate)", provider: "replicate" },
-  { id: "gemini-imagen-3", display_name: "Imagen 3 (Google)", provider: "google" },
+  { id: "flux-schnell", display_name: "Flux Schnell", provider: "replicate" },
 ];

@@ -1,4 +1,3 @@
-account_id: XHS_01
 platform: xiaohongshu
 persona:
   name: 中考学生家长
@@ -21,11 +20,11 @@ keywords:
   - 一模
   - 二模
 models:
-  data_collector: gemini-2.5-flash
-  logic_analyst: claude-3.7-opus
-  copywriter: claude-3.7-sonnet
+  data_collector: gpt-4o
+  logic_analyst: gpt-4o
+  copywriter: gpt-4o
   strategist: gpt-4o
-  fallback: gemini-2.5-flash
+  fallback: gpt-4o
   image_gen: null
 visual_style:
   color_scheme:
@@ -51,8 +50,8 @@ schedule:
     - 19:00-21:00
   max_daily_posts: 2
   review_mode: review
-  auto_post: true      # 是否参与每日自动发文
-  auto_engage: true    # 是否参与自动社交互动（点赞/评论引流）
+  auto_post: true
+  auto_engage: true
 sensitive_words_extra:
   - 包过
   - 保分
