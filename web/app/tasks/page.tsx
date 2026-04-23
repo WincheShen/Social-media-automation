@@ -15,18 +15,32 @@ export default function TasksPage() {
   const [description, setDescription] = useState("");
 
   const fetchData = useCallback(async () => {
-    const [tasksRes, accountsRes] = await Promise.all([
-      fetch("/api/tasks"),
-      fetch("/api/accounts"),
-    ]);
-    setTasks(await tasksRes.json());
-    setAccounts(await accountsRes.json());
-    setLoading(false);
+    console.log("[tasks] fetchData() called");
+    try {
+      const [tasksRes, accountsRes] = await Promise.all([
+        fetch("/api/tasks"),
+        fetch("/api/accounts"),
+      ]);
+      console.log("[tasks] fetch status:", { tasks: tasksRes.status, accounts: accountsRes.status });
+      if (!accountsRes.ok) {
+        console.error("[tasks] /api/accounts failed:", accountsRes.status);
+      }
+      const accountsData = await accountsRes.json();
+      const tasksData = await tasksRes.json();
+      console.log("[tasks] loaded accounts:", accountsData.length, accountsData);
+      console.log("[tasks] loaded tasks:", tasksData.length);
+      setTasks(tasksData);
+      setAccounts(accountsData);
+    } catch (e) {
+      console.error("[tasks] fetchData error:", e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
+    console.log("[tasks] component mounted, calling fetchData");
     fetchData();
-    // Auto-refresh every 5s for running tasks
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, [fetchData]);
@@ -69,6 +83,12 @@ export default function TasksPage() {
         className="bg-card rounded-xl border border-border p-6 space-y-4"
       >
         <h2 className="font-semibold">创建新任务</h2>
+        {!loading && accounts.length === 0 && (
+          <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            ⚠️ 没有找到账号。请检查 <code className="font-mono text-xs">config/identities/</code> 下是否有 YAML 文件,
+            或打开浏览器 Console 查看错误。
+          </div>
+        )}
         <div className="flex gap-3">
           <select
             value={selectedAccount}

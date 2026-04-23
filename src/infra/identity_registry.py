@@ -33,11 +33,13 @@ class IdentityRegistry:
         for path in sorted(self._config_dir.glob("*.yaml")):
             try:
                 with open(path, "r", encoding="utf-8") as f:
-                    config = yaml.safe_load(f)
-                account_id = config.get("account_id")
-                if account_id:
-                    self._identities[account_id] = config
-                    logger.info("Loaded identity: %s from %s", account_id, path.name)
+                    config = yaml.safe_load(f) or {}
+                # Prefer explicit account_id in YAML; fallback to filename stem
+                account_id = config.get("account_id") or path.stem
+                # Ensure the config dict always carries its account_id for downstream consumers
+                config.setdefault("account_id", account_id)
+                self._identities[account_id] = config
+                logger.info("Loaded identity: %s from %s", account_id, path.name)
             except Exception as e:
                 logger.error("Failed to load identity from %s: %s", path, e)
 

@@ -34,15 +34,18 @@ export default function AccountsPage() {
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">{acc.persona?.description}</p>
-                  <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center gap-4 mt-2 flex-wrap">
                     <span className="text-xs text-muted-foreground">
                       赛道: <span className="text-foreground font-medium">{acc.track}</span>
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      主模型: <span className="text-foreground font-medium">{acc.models?.primary}</span>
+                      创作: <span className="text-foreground font-medium">{acc.models?.copywriter || acc.models?.primary || "—"}</span>
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      Fallback: <span className="text-foreground font-medium">{acc.models?.fallback}</span>
+                      分析: <span className="text-foreground font-medium">{acc.models?.logic_analyst || acc.models?.primary || "—"}</span>
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Fallback: <span className="text-foreground font-medium">{acc.models?.fallback || "—"}</span>
                     </span>
                     <span className="text-xs text-muted-foreground">
                       审核: <span className="text-foreground font-medium">{acc.schedule?.review_mode}</span>

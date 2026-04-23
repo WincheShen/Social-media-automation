@@ -32,6 +32,31 @@ function getDb(): Database.Database {
       error TEXT
     )
   `);
+
+  // Idempotent migrations: ensure all expected columns exist on pre-existing tables
+  const existingCols = new Set(
+    (db.prepare("PRAGMA table_info(tasks)").all() as { name: string }[]).map(
+      (r) => r.name
+    )
+  );
+  const requiredCols: Record<string, string> = {
+    draft_title: "TEXT",
+    draft_content: "TEXT",
+    draft_tags: "TEXT",
+    research_summary: "TEXT",
+    research_data: "TEXT",
+    safety_issues: "TEXT",
+    image_gen_prompt: "TEXT",
+    generated_images: "TEXT",
+    post_url: "TEXT",
+    error: "TEXT",
+  };
+  for (const [col, type] of Object.entries(requiredCols)) {
+    if (!existingCols.has(col)) {
+      db.exec(`ALTER TABLE tasks ADD COLUMN ${col} ${type}`);
+    }
+  }
+
   return db;
 }
 

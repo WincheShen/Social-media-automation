@@ -147,7 +147,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="font-medium text-sm">{acc.persona?.name || acc.account_id}</p>
-                    <p className="text-xs text-muted-foreground">{acc.track} · {acc.models?.primary}</p>
+                    <p className="text-xs text-muted-foreground">{acc.track} · {acc.models?.copywriter || acc.models?.primary || acc.models?.fallback || "—"}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-6">
